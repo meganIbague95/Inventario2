@@ -1,0 +1,194 @@
+/*Fuente de iconos*/
+@font-face {
+	font-family: 'as-icons';
+	src:url('../fonts/as-icons.eot?-20180112');
+	src:url('../fonts/as-icons.eot?#iefix-20180112') format('embedded-opentype'),
+		url('../fonts/as-icons.woff?-20180112') format('woff'),
+		url('../fonts/as-icons.ttf?-20180112') format('truetype'),
+		url('../fonts/as-icons.svg?-20180112#as-icons') format('svg');
+	font-weight: normal;
+	font-style: normal;
+}
+
+[class^="as-icon-"], [class*="as-icon-"] {
+	font-family: 'as-icons';
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+
+@font-face {
+  font-family: 'as-icon-trofeos';
+  src:url('../fonts/as-icons-trofeos.eot?as20180109_1150');
+  src:url('../fonts/as-icons-trofeos.eot#iefix') format('embedded-opentype'),
+    url('../fonts/as-icons-trofeos.ttf?as20180109_1150') format('truetype'),
+    url('../fonts/as-icons-trofeos.woff?as20180109_1150') format('woff'),
+    url('../fonts/as-icons-trofeos.svg#as-icon-trofeos?as20180109_1150') format('svg');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="as-icon-trofeos-"], [class*=" as-icon-trofeos-"] {
+  font-family: 'as-icon-trofeos';
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+[class^="as-icon-trofeos-"]:before, [class*=" as-icon-trofeos-"]:before{
+  content: "\e617";
+}
+
+
+.as-icon-baloncesto:before {content: "\e601";}
+.as-icon-balonmano:before {	content: "\e602";}
+.as-icon-ciclismo:before { content: "\e603";}
+.as-icon-formula1:before, .as-icon-motor:before { content: "\e604";}
+.as-icon-futbol:before { content: "\e605";}
+.as-icon-futbol-b:before { content: "\e629";}
+.as-icon-motogp:before { content: "\e606";}
+.as-icon-tenis:before { content: "\e607";}
+.as-icon-medalla:before { content: "\e62e";}
+
+.as-icon-campo:before { content: "\e60d";}
+.as-icon-posesion:before { content: "\e600";}
+.as-icon-posicion:before { content: "\e60b";}
+.as-icon-pizarra:before { content: "\e60a";}
+.as-icon-zona-influencia:before { content: "\e609";}
+.as-icon-repeticion:before { content: "\e608";}
+.as-icon-microfono:before { content: "\e60c";}
+.as-icon-arbitro:before { content: "\e620";}
+.as-icon-cambio:before { content: "\e621";}
+.as-icon-tarjeta-roja:before { content: "\e622";}
+.as-icon-tarjeta-amarilla:before { content: "\e623";}
+.as-icon-pica:before { content: "\e628";}
+.as-icon-bandera-cuadros:before { content: "\e906";}
+.as-icon-averia:before { content: "\e914";}
+.as-icon-coche-seg:before { content: "\e915";}
+.as-icon-accidente:before { content: "\e917";}
+.as-icon-semaforo:before { content: "\e918";}
+.as-icon-stop:before { content: "\e919";}
+.as-icon-bandera:before { content: "\e91a";}
+.as-icon-meta:before { content: "\e91d";}
+.as-icon-sprint:before { content: "\e91e";}
+.as-icon-puerto:before { content: "\e91f";}
+.as-icon-situacion:before { content: "\e920";}
+.as-icon-estrella:before { content: "\e922";}
+.as-icon-triple:before { content: "\e923";}
+.as-icon-touchdown:before { content: "\e924";}
+.as-icon-rugby:before { content: "\e925";}
+.as-icon-tactica-inversa:before { content: "\e926";}
+.as-icon-nfl-perdida:before { content: "\e927";}
+.as-icon-ace:before { content: "\e92c";}
+.as-icon-doble-falta:before { content: "\e92a";}
+.as-icon-raqueta:before { content: "\e92b";}
+.as-icon-tie-break:before { content: "\e929";}
+.as-icon-medico:before { content: "\e928";}
+
+.as-icon-logo:before { content: "\e61c";}
+.as-icon-noticia:before { content: "\e632";}
+.as-icon-calendario:before { content: "\e60e";}
+.as-icon-clasificacion:before { content: "\e612";}
+.as-icon-graficos:before,
+.as-icon-estadisticas:before { content: "\e611";}
+.as-icon-tv:before { content: "\e60f";}
+.as-icon-apuestas:before { content: "\e610";}
+.as-icon-anterior:before { content: "\e613";}
+.as-icon-siguiente:before { content: "\e614";}
+.as-icon-trofeo:before { content: "\e617";}
+.as-icon-perfil:before { content: "\e615";}
+.as-icon-candado:before { content: "\e62d";}
+.as-icon-login:before { content: "\e903";}
+.as-icon-premio:before { content: "\e616";}
+.as-icon-comentario:before { content: "\e61d";}
+.as-icon-edicion:before { content: "\e61e";}
+.as-icon-reloj:before { content: "\e61f";}
+.as-icon-cerrar:before { content: "\e626";}
+.as-icon-buscar:before { content: "\e627";}
+.as-icon-firma:before { content: "\e62f";}
+.as-icon-escudo:before { content: "\e630";}
+.as-icon-directo:before { content: "\e900";}
+.as-icon-compartir:before { content: "\e901";}
+.as-icon-resultados:before { content: "\e902";}
+.as-icon-encuesta:before { content: "\e904";}
+.as-icon-sobre:before { content: "\e90e";}
+
+.as-icon-astv:before { content: "\e62a";}
+.as-icon-asfotos:before { content: "\e62b";}
+.as-icon-ascolor:before { content: "\e921";}
+.as-icon-asdatos:before { content: "\e62c";}
+.as-icon-aniv:before { content: "\e912";}
+.as-icon-50:before { content: "\e916";}
+.as-icon-tk:before { content: "\e905";}
+.as-icon-tikitakas:before { content: "\e908";}
+.as-icon-epik:before { content: "\e907";}
+.as-icon-epik-mini:before { content: "\e909";}
+.as-icon-betech:before { content: "\e90a";}
+.as-icon-betech-mini:before { content: "\e90b";}
+.as-icon-bvida:before { content: "\e90f";}
+.as-icon-bvida-mini:before { content: "\e910";}
+.as-icon-dvida:before { content: "\e91b";}
+.as-icon-dvida-mini:before { content: "\e91c";}
+
+.as-icon-twitter:before { content: "\e618";}
+.as-icon-facebook:before { content: "\e619";}
+.as-icon-google-plus:before { content: "\e61a";}
+.as-icon-whatsapp:before { content: "\e61b";}
+.as-icon-youtube:before { content: "\e90c";}
+.as-icon-instagram:before { content: "\e90d";}
+.as-icon-linkedin:before { content: "\e911";}
+.as-icon-msn:before { content: "\e913";}
+
+.as-icon-play:before { content: "\e624";}
+.as-icon-foto:before { content: "\e631";}
+.as-icon-repeat:before { content: "\e625";}
+
+.t16 { font-size: 16px;}
+.t24 { font-size: 24px;}
+.t32 { font-size: 32px;}
+.t48 { font-size: 48px;}
+.t60 { font-size: 60px;}
+
+.icon-color-gray { color:#333;}
+.icon-color-white { color: #fff;}
+.icon-color-black { color: #000;}
+
+.as-icon-trofeos-futbol-generica:before{content:"\e90d"}
+.as-icon-trofeos-futbol-primera:before{content:"\e900"}
+.as-icon-trofeos-futbol-copa_del_rey:before{content:"\e901"}
+.as-icon-trofeos-futbol-supercopa:before{content:"\e902"}
+.as-icon-trofeos-futbol-champions:before{content:"\e903"}
+.as-icon-trofeos-futbol-europa_league:before{content:"\e904"}
+.as-icon-trofeos-futbol-supercopa_europa:before{content:"\e905"}
+.as-icon-trofeos-futbol-mundial_clubes:before{content:"\e906"}
+.as-icon-trofeos-futbol-eurocopa:before{content:"\e907"}
+.as-icon-trofeos-futbol-mundial:before{content:"\e908"}
+.as-icon-trofeos-futbol-confederaciones:before{content:"\e909"}
+.as-icon-trofeos-futbol-copa_america:before{content:"\e90a"}
+.as-icon-trofeos-futbol-copa_oro_concacaf:before{content:"\e90b"}
+.as-icon-trofeos-futbol-copa_libertadores:before{content:"\e90c"}
+.as-icon-trofeos-futbol-alemania:before {content: "\e90e";}
+.as-icon-trofeos-futbol-copa_alemania:before {content: "\e90f";}
+.as-icon-trofeos-futbol-inglaterra:before {content: "\e910";}
+.as-icon-trofeos-futbol-fa_cup:before {content: "\e911";}
+.as-icon-trofeos-futbol-community_shield:before {content: "\e912";}
+.as-icon-trofeos-futbol-italia:before {content: "\e934";}
+.as-icon-trofeos-futbol-copa_italia:before {content: "\e935";}
+.as-icon-trofeos-futbol-francia:before {content: "\e936";}
+.as-icon-trofeos-futbol-copa_francia:before {content: "\e937";}
+.as-icon-trofeos-futbol-portugal:before {content: "\e933";}
+.as-icon-trofeos-futbol-copa_portugal:before {content: "\e93c";}

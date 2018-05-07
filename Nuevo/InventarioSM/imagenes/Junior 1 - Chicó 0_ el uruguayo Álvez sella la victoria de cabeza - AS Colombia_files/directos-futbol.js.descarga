@@ -1,0 +1,188 @@
+/**
+ * Libreria JS Directos Fútbol AS
+ * Version 1.1 - 2016.03.03
+ * Autores: DAS
+ * Using jQuery minimized on utils.js
+ * Copyright 2012 jQuery Foundation and other contributors - http://jquery.com
+ */
+
+$(document).ready(function(){
+	//para la web en ingles
+	if("en" === window.location.hostname.split(".")[0]) {
+		$("#comments-live-es").remove();
+		if($("#comments-live-en").length == 0){
+			$("#comments-live-en-auto").removeClass("s-hidden");
+			$("#comments-live-en-auto").removeClass("hide");
+		}
+		if(undefined !== $(".cont-botones-modulo")){
+			$(".cont-botones-modulo").remove();
+		}
+		var dom_a =$(".cont-icon-dir");
+		dom_a.each(function( index ) {
+			var new_href = null;
+			if("des" === window.location.hostname.split(".")[1]){
+				new_href = this.parentNode.href.replace("http://resultados.des.diarioas.int:7080","");
+			}else{
+				new_href = this.parentNode.href.replace("http://resultados.as.com","");
+			}
+			this.parentNode.href=new_href;
+		});
+	}
+/* TABS RETRANSMISION */
+	$(".utiles-narracion ul.tabs li").click(function(){
+		var unactive_tab = $(".utiles-narracion ul.tabs li.active");
+		if(!$(this).hasClass("active")){
+			unactive_tab.removeClass("active");
+			var active_tab = $(this).addClass("active");
+			$(active_tab[0].children[0].attributes.value.value).removeClass("s-hidden");
+			$(active_tab[0].children[0].attributes.value.value).removeClass("hide");
+			$(unactive_tab[0].children[0].attributes.value.value).addClass("s-hidden");
+			$(unactive_tab[0].children[0].attributes.value.value).addClass("hide");
+		}
+	});
+
+	/* COMMENTS */
+	$(".utiles-narracion .cont-botones-modulo > a").click(function(){
+		if(this.innerHTML == "Español"){
+			this.innerHTML = "English";
+			this.attributes['href'].value = "#comments-live-en";
+			$("#comments-live-en-auto").addClass("s-hidden");
+			$("#comments-live-en-auto").addClass("hide");
+			$(".utiles-narracion ul.tabs").removeClass("s-hidden");
+			$(".utiles-narracion ul.tabs").removeClass("hide");
+			if($("#comments-live-es").length){
+				$("#comments-live-es").removeClass("s-hidden");
+				$("#comments-live-es").removeClass("hide");
+			}
+			else{
+				$("#comments-live-es-auto").removeClass("s-hidden");
+				$("#comments-live-es-auto").removeClass("hide");
+			}
+		}else{
+			if(this.innerHTML == "English"){
+				this.innerHTML = "Español";
+				this.attributes['href'].value = "#comments-es";
+				$("#comments-live-en-auto").removeClass("s-hidden");
+				$("#comments-live-en-auto").removeClass("hide");
+				$(".utiles-narracion ul.tabs").addClass("s-hidden");
+				$(".utiles-narracion ul.tabs").addClass("hide");
+				$("#comments-live-es").addClass("s-hidden");
+				$("#comments-live-es").addClass("hide");
+				$("#comments-live-es-auto").addClass("s-hidden");
+				$("#comments-live-es-auto").addClass("hide");
+			}
+		}
+	});
+
+	/* FRONT/2D/3D FIELDS */
+	var caracter = 'local';
+	$(".fld-equipo").click(function(){
+		caracter = $(this).attr('id').replace('fld-equipo-', '');
+		$(".fld-front").hide();
+		$(".fld-2d").hide();
+		$(".fld-3d").hide();
+		$(".fld-list").hide();
+		$(".fld-view-"+caracter).show().css("display", "block");
+		$(this).closest('ul').find('a').removeClass('active');
+		$(this).addClass('active');
+	});
+
+	$(".fld-view-2d").click(function(){
+		$(".fld-front").hide();
+		$(".fld-2d").hide();
+		$(".fld-3d").hide();
+		$(".fld-view-"+caracter).show().css("display", "block");
+		$("#campo-frontal").hide();
+		$("#campo2d").css("display", "inline-block");
+		$("#campo3d").hide();
+		$(this).closest('ul').find('a').removeClass('active');
+		$(this).addClass('active');
+	});
+
+	$(".fld-view-3d").click(function(){
+		$(".fld-front").hide();
+		$(".fld-2d").hide();
+		$(".fld-3d").hide();
+		$(".fld-3d").hide();
+		$(".fld-view-"+caracter).show().css("display", "block");
+		$("#campo-frontal").hide();
+		$("#campo2d").hide();
+		$("#campo3d").show().css("display", "inline-block");
+		$(this).closest('ul').find('a').removeClass('active');
+		$(this).addClass('active');
+	});
+
+	$(".fld-view-front").click(function(){
+		$(".fld-front").hide();
+		$(".fld-2d").hide();
+		$(".fld-3d").hide();
+		$(".fld-view-"+caracter).show().css("display", "block");
+		$("#campo-frontal").show().css("display", "inline-block");
+		$("#campo2d").hide();
+		$("#campo3d").hide();
+		$(this).closest('ul').find('a').removeClass('active');
+		$(this).addClass('active');
+	});
+
+	$(".fld-view-goal").click(function(){
+		$(this).closest('ul').find('a').removeClass('active');
+		$(this).addClass('active');
+		$(".tiro-puerta").hide();
+		$(".gol").show();
+	});
+
+	$(".fld-view-ontarget").click(function(){
+		$(this).closest('ul').find('a').removeClass('active');
+		$(this).addClass('active');
+		$(".tiro-puerta").show();
+		$(".gol").hide();
+		$(".leyenda-remates .gol").show();
+	});
+
+	$(".fld-list ul li").hover(
+		function(){
+			var hch = $(this).attr("id").replace("hch_marker_", "");
+			$(".ocasion").css("opacity", "0.3");
+			$(".hch_"+hch).css("opacity", "1");
+			$("path").css("opacity", "0.2");
+			$(".hch_path_"+hch).css("opacity", "0.8");
+			$(".hch_path_point").css("opacity", "0.3");
+			$(".hch_path_point_"+hch).css("opacity", "1");
+		},
+		function(){
+			$(".ocasion").css("opacity", "1");
+			$(".hch_path_point").css("opacity", "1");
+			$("path").css("opacity", "0.5");
+		}
+	);
+
+	//$(".gol").hide();
+	$(".leyenda-remates .gol").show();
+
+/*timeline*/
+	$("div.evento").hover(
+		function(){$(this).addClass("show");},
+		function(){$(this).removeClass("show");}
+	);
+});
+
+function actualizacion_directo(pestanya, forzar){
+    if (forzar)
+        window.location.href = addParametroURL(window.location.href, 'omnaut', '1');
+    if (typeof(pestanya) == 'undefined')
+        pestanya = '';
+	switch (pestanya)
+	{
+	    case 'previa':
+	       if(informacion_directo && informacion_directo.est==0)
+	           setTimeout(function(){actualizacion_directo(pestanya, true)}, 60000);
+	       break;
+	    case 'narracion':
+	    case 'retransmision':
+	    case '':
+	       setTimeout(function(){actualizacion_directo(pestanya, true)}, 60000);
+	       break;
+	    default:
+	       break;
+	}
+}

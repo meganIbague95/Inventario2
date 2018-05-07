@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="800px" height="533px" viewBox="0 0 800 533" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 48.2 (47327) - http://www.bohemiancoding.com/sketch -->
+    <title>Artboard</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <path d="M534,267 L1068,267 L1068,534 L534,267 Z M534,267 L534,534 L0,534 L534,267 Z M534,267 L0,267 L0,0 L534,267 Z M534,267 L534,0 L1068,0 L534,267 Z" id="path-1"></path>
+    </defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard">
+            <g id="Flag_of_the_United_Kingdom" transform="translate(-134.000000, 0.000000)">
+                <polygon id="Shape" fill="#00247D" fill-rule="nonzero" points="0 0 0 534 1068 534 1068 0"></polygon>
+                <path d="M0,0 L1068,534 M1068,0 L0,534" id="Shape" stroke="#FFFFFF" stroke-width="106.8" fill="#000000" fill-rule="nonzero"></path>
+                <g id="Clipped">
+                    <mask id="mask-2" fill="white">
+                        <use xlink:href="#path-1"></use>
+                    </mask>
+                    <g id="Shape"></g>
+                    <path d="M0,0 L1068,534 M1068,0 L0,534" id="Shape" stroke="#CF142B" stroke-width="71.2" fill="#000000" fill-rule="nonzero" mask="url(#mask-2)"></path>
+                </g>
+                <path d="M534,0 L534,534 M0,267 L1068,267" id="Shape" stroke="#FFFFFF" stroke-width="178" fill="#000000" fill-rule="nonzero"></path>
+                <path d="M534,0 L534,534 M0,267 L1068,267" id="Shape" stroke="#CF142B" stroke-width="106.8" fill="#000000" fill-rule="nonzero"></path>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -1,0 +1,93 @@
+
+var productoSlider = {
+	init:function(){
+        var producto = $('.producto');
+        if (producto != undefined && producto.length){
+    		producto.slick({
+    			centerMode: false,
+    			centerPadding: '64px',
+    			slidesToShow: 4,
+    			infinite:false,
+    			dots: true,
+    			appendArrows: $(".flechas"),
+    			responsive: [
+    				{
+    					breakpoint: 991,
+    					settings: {
+    						centerPadding: '64px',
+    						slidesToShow: 2
+    					}
+    				},
+    				{
+    					breakpoint: 460,
+    					settings: {
+    						arrows: false,
+    						centerMode: true,
+    						centerPadding: '16px',
+    						dots: false,
+    						slidesToShow: 1
+    					}
+    				}
+    			]
+    		});
+        }
+	}
+};
+
+var comportamientoCabecera = {
+    init:function(){
+        $(".abrir-buscador-sup").click(function(e){
+          e.preventDefault();
+          $(".buscador-superior").toggle();
+        });
+        $(".cerrar-buscador-sup").click(function(e){
+          e.preventDefault();
+          $(".buscador-superior").toggle();
+        });
+
+        function fixedMenu () {
+            var posMenu = $('.menu-principal').offset().top;
+            //var posMenu = $('.csel-agenda').outerHeight();
+
+            if(posMenu === 0)
+                $(".menu-principal").removeClass( "fixed-menu" );
+
+            if(($(window).scrollTop() >= posMenu && $( window ).width() < 754) || ($(window).scrollTop() >  $('.csel-agenda').outerHeight())){
+
+                if(!$(".menu-principal").hasClass( "fixed-menu" )){
+                    $(".menu-principal").addClass( "fixed-menu" );
+                    //$("body").removeClass( "portada-ppal" );
+                }
+            }else{
+                $(".menu-principal").removeClass( "fixed-menu" );
+                //$("body").addClass( "portada-ppal" );
+            }
+        }
+
+        $(window).scroll(function(){
+            fixedMenu();
+        });
+        $(window).resize(function(){
+            fixedMenu();
+        });
+    }
+};
+
+var menuEnlacesCintilloArea = {
+    init:function() {
+        $('.cint .cint-btn').click(function(e) {
+            e.preventDefault();
+            $(this).parent().toggleClass('desplegado');
+        });
+    },
+    reinit:function() {
+        $('.cint .cint-btn').unbind( "click" );
+        menuEnlacesCintilloArea.init();
+    }
+};
+
+$(document).ready(function() {
+    //productoSlider.init();
+    comportamientoCabecera.init();
+    menuEnlacesCintilloArea.init();
+});

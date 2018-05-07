@@ -1,0 +1,405 @@
+/*
+ * Detectamos el idioma para definir los mensajes
+ * */
+var LANG_UTIL = {
+  "es":{
+    "compartir":"Compartir",
+		"me_gusta":"Me gusta"
+  },
+  "en":{
+    "compartir":"Share",
+		"me_gusta":"Like"
+  }
+};
+
+//var idioma = document.getElementsByTagName('html')[0].getAttribute('lang');; //por defecto
+var idioma = $('html').attr('lang') ? $('html').attr('lang') : 'es';
+//Si no se fuerza uno, el encontrado en las metas
+if (typeof(LANG) == "undefined")
+	var LANG = idioma;
+else
+{
+	//Nos aseguramos de que nos llega algo valido y si no ponemos espana
+	if ( !LANG_UTIL.hasOwnProperty(LANG) )
+	{
+		LANG = "es";
+	}
+}
+
+var navegacionSabanas = {
+	timer:null,
+	milisegundos:350,
+	init:function(){
+		if ("ontouchstart" in window || "ontouch" in window){$('#navegacion1 > ul > li > a').click(function(e){if($(this).parent().hasClass("actual") || $(this).parent().hasClass("as")){window.location=$(this).attr("href");}else{e.preventDefault();}});}
+		$('#navegacion1 > ul > li').mouseenter(function(){obj=this;clearTimeout(navegacionSabanas.timer);navegacionSabanas.timer=setTimeout(function(){navegacionSabanas.menuEnter(obj)},navegacionSabanas.milisegundos)});
+        if($('header.portada').html()){navegacionSabanas.classPortada = "portada";}
+        else if($('header.header-interior').html()){navegacionSabanas.classPortada = "header-interior";}
+		$('header.'+navegacionSabanas.classPortada).mouseleave(navegacionSabanas.menuOut);
+		$('.hdr-p').mouseenter(navegacionSabanas.menuOut);
+		$('header.'+navegacionSabanas.classPortada+' > nav > section.sub-nav').mouseenter(function(){clearTimeout(navegacionSabanas.timer)});
+		$('#navegacion1 > ul > li:eq(0)').unbind('mouseenter');
+		$('#navegacion1 > ul > li:eq(0)').mouseover(navegacionSabanas.menuOut);
+	},
+
+	menuEnter:function(obj){
+		$('#navegacion1 > ul > li').removeClass('actual');
+		$(obj).addClass('actual');
+		$('header.'+navegacionSabanas.classPortada+' > nav > section.sub-nav').hide();
+        if(!$('#wrapper_sabana_'+$(obj).attr('id').replace('menu_','')).html())
+            $('#wrapper_sabanas').append(sabanas[$(obj).attr('id').replace('menu_','sabana_')]);
+		if ($(obj).attr('id'))$('header.'+navegacionSabanas.classPortada+' > nav > section.'+$(obj).attr('id').replace('menu_','')).show();
+	},
+
+	menuOut:function(){
+		clearTimeout(navegacionSabanas.timer);
+		navegacionSabanas.timer=setTimeout(function(){
+				$('#navegacion1 > ul > li').removeClass('actual');
+				$('header.'+navegacionSabanas.classPortada+' > nav > section.sub-nav').hide();
+		},navegacionSabanas.milisegundos);
+
+	}
+}
+
+var desplegablesJS = {
+
+	init:function(){
+		$("ul.inl-list li.desplegable").mouseenter(desplegablesJS.mouseEnter).mouseleave(desplegablesJS.mouseOut);
+	},
+
+	mouseEnter:function(){
+		$(this).addClass('hdr-scn-active').children('div.hdr-in-scn-nav').show();
+	},
+
+	mouseOut:function(){
+		$(this).removeClass('hdr-scn-active').children('div.hdr-in-scn-nav').hide();
+	}
+
+}
+
+var historicoJS = {
+
+	init:function(){
+		$("ul.inl-list li[id^='historico']").mouseenter(historicoJS.mouseEnter).mouseleave(historicoJS.mouseOut);
+	},
+
+	mouseEnter:function(){
+		$(this).children('ul.tercerNiv').fadeIn(220);
+	},
+
+	mouseOut:function(){
+		$(this).children('ul.tercerNiv').fadeOut(100);
+	}
+
+}
+
+var pestanasAgenda = {
+	init:function(){
+		$("#capa_hoy").show();
+		$("#contenedor-agenda .tabsagenda a").click(function(){
+			var id = $(this).attr("id");
+			var dat = id.split("_");
+			var params = dat[1];
+			var blok = "capa_"+params;
+			$(".tabsagenda li").removeClass("tabmarcado")
+			$("#capa_hoy, #capa_manana, #capa_pasado").hide();
+			$(this).parent().addClass("tabmarcado");
+			$("#"+blok).show();
+			return false;
+		});
+	}
+}
+
+var selectorEdicionInternacional = {
+	init:function(){
+		$("#ed-selector .ed-selector-button").click(function(e){ e.preventDefault(); $("#ed-selector ul").show(); });
+		$("#ed-selector ul .sel").click(function(e){ e.preventDefault(); $("#ed-selector ul").hide(); });
+		$("#ed-selector ul").mouseleave(function(){  $("#ed-selector ul").hide(); });
+		$("#ed-selector-secciones .ed-selector-button").click(function(e){ $("#ed-selector-secciones ul").toggle(); });
+		$("#ed-selector-secciones ul").mouseleave(function(){  $("#ed-selector-secciones ul").hide(); });
+	}
+}
+
+var usuarioDisplay = {
+    init:function(){
+        $("#uu-display-button").click(function(e){ e.preventDefault(); $("#uu-display .hdr-usr-dropdown").show(); });
+        $("#uu-display .hdr-close").click(function(e){ e.preventDefault(); $("#uu-display .hdr-usr-dropdown").hide(); });
+        $("#uu-display .hdr-usr-dropdown").mouseleave(function(){  $("#uu-display .hdr-usr-dropdown").hide(); });
+    }
+}
+
+if (typeof($)=="function"){
+	$(document).ready(function(){
+		/* Sábanas del menú de primer nivel */
+		navegacionSabanas.init();
+
+		/* Desplegables del menú de segundo nivel */
+		desplegablesJS.init();
+
+		/* Desplegables del histórico */
+		historicoJS.init();
+
+		/* Pestanyas de la agenda */
+		pestanasAgenda.init();
+
+		/* Selector Edicion Internacional */
+		selectorEdicionInternacional.init();
+
+		/* Display Usuario Único */
+		usuarioDisplay.init();
+	});
+}
+
+var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+var eventerMessage = window[eventMethod];
+var messageEvent = eventMethod == "attachEvent" ? "onmessage" : "message";
+
+eventerMessage(messageEvent,function(e) {
+	try{
+		var myJSON = eval('('+e.data+')');
+		$('#'+myJSON.id).height(myJSON.height);
+	}catch(e){}
+},false);
+
+$.extend({
+  getUrlVars: function(){
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+      hash = hashes[i].split('=');
+      vars.push(hash[0]);
+      vars[hash[0]] = hash[1];
+    }
+    return vars;
+  },
+  getUrlVar: function(name){
+    return $.getUrlVars()[name];
+  }
+});
+
+/**
+ *
+ * Objeto para crear dinámicamente la capa de compartir en las portadillas
+ *
+ * @arg _contenedor Boton que lanzará la capa
+ * @arg _params Objeto con los parámetros de la página
+ *
+ **/
+function objBotonesCompartir(_boton,_params){
+
+	var boton = _boton;
+	var params = _params;
+    if(params.url.substring(0,7) != 'http://'){
+	   params.url='http://'+window.location.host+params.url;
+    }
+	var template_boton='<p class="icon-share icon s-inb [class]">[nombre]</p><span class="s-inb s-L s-stext-nc"><a href="javascript:void(0);"><strong>[texto]</strong></a></span>';
+	var template_carcasa='<p class="s-L s-stext-nc">'+LANG_UTIL[LANG].compartir+'</p>';
+
+	function init(){
+		var content = document.createElement('div');
+		content.className='ntc-cmp-module s-pa gap-3';
+		content.innerHTML=template_carcasa;
+
+		var ul_contenedor = document.createElement('ul');
+		ul_contenedor.appendChild(_creaBotonFacebook());
+		ul_contenedor.appendChild(_creaBotonGooglePlus());
+		ul_contenedor.appendChild(_creaBotonTwitter());
+		ul_contenedor.appendChild(_creaBotonTuenti());
+
+		content.appendChild(ul_contenedor);
+
+		boton.appendChild(content);
+	}
+
+	function _creaBotonFacebook(){
+
+
+		var content = template_boton;
+		content = content.replace('[class]','icon-shr-facebook');
+		content = content.replace('[nombre]','Facebook');
+		content = content.replace('[texto]',LANG_UTIL[LANG].me_gusta);
+
+		var li = document.createElement('li');
+		li.innerHTML=content;
+		li.getElementsByTagName('a')[0].onclick=function(){_botonClick('http://www.facebook.com/sharer.php?u='+encodeURIComponent(params.url)+'&t='+encodeURIComponent(params.text),'Compartir');};
+
+		return li;
+	}
+
+	function _creaBotonGooglePlus(){
+		var content = template_boton;
+		content = content.replace('[class]','icon-shr-google');
+		content = content.replace('[nombre]','Google+');
+		content = content.replace('[texto]','Google+');
+
+		var li = document.createElement('li');
+		li.innerHTML=content;
+		li.getElementsByTagName('a')[0].onclick=function(){_botonClick('https://plus.google.com/share?url='+encodeURIComponent(params.url),'Google +');};
+
+		return li;
+	}
+
+	function _creaBotonTwitter(){
+
+	
+		var content = template_boton;
+		content = content.replace('[class]','icon-shr-twitter');
+		content = content.replace('[nombre]','Twitter');
+		content = content.replace('[texto]','Twitter');
+
+		var li = document.createElement('li');
+		li.innerHTML=content;
+		li.getElementsByTagName('a')[0].onclick=function(){_botonClick('http://twitter.com/share?url=' + encodeURIComponent(params.url) + '&text=' + encodeURIComponent(params.text) + (__g_twitter_via!=='' ? '&via=' + __g_twitter_via : ''),'Twitter');};
+
+		return li;
+	}
+
+	function _creaBotonTuenti(){
+
+		var content = template_boton;
+		content = content.replace('[class]','icon-shr-tuenti');
+		content = content.replace('[nombre]','Tuenti');
+		content = content.replace('[texto]','Tuenti');
+
+		var li = document.createElement('li');
+		li.innerHTML=content;
+		li.getElementsByTagName('a')[0].onclick=function(){_botonClick('http://www.tuenti.com/share?url='+encodeURI(params.url),'Tuenti');};
+
+		return li;
+	}
+
+	function _botonClick(call,title){
+
+		/* Centramos */
+		var width   = 650;
+		var height  = 450;
+		var sheight = screen.height;
+		var swidth  = screen.width;
+		var left = Math.round((swidth/2)-(width/2));
+		var top  = (sheight>height)? Math.round((sheight/2)-(height/2)) : 0;
+		/* Popup */
+		var win  = window.open(call, title, "left="+left+",top="+top+",width="+width+",height="+height+",personalbar=0,toolbar=0,scrollbars=1,resizable=1");
+		if (win) {win.focus();}
+		return;
+	}
+
+	init();
+}
+
+function _botonClickResponsive(call,title){
+
+		/* Centramos */
+		var width   = 650;
+		var height  = 450;
+		var sheight = screen.height;
+		var swidth  = screen.width;
+		var left = Math.round((swidth/2)-(width/2));
+		var top  = (sheight>height)? Math.round((sheight/2)-(height/2)) : 0;
+		/* Popup */
+		var win  = window.open(call, title, "left="+left+",top="+top+",width="+width+",height="+height+",personalbar=0,toolbar=0,scrollbars=1,resizable=1");
+		if (win) {win.focus();}
+		return;
+	}
+
+function DespliegaCompartir(obj,_params){
+
+	/* Detectamos si hay que mostara u ocultar el bocadillo de compartir */
+
+	if (obj.parentNode.className!='ntc-compartir s-inb s-pr ntc-cmp-active'){
+		obj.parentNode.className='ntc-compartir s-inb s-pr ntc-cmp-active';
+		obj.className=obj.className.replace('i-s-compartir','i-s-cerrar');
+		new objBotonesCompartir(obj.parentNode,_params);
+	}else{
+		obj.parentNode.className='ntc-compartir s-inb s-pr';
+		obj.parentNode.removeChild(obj.parentNode.getElementsByTagName('div')[0]);
+		obj.className=obj.className.replace('i-s-cerrar','i-s-compartir');
+	}
+}
+
+ $(document).ready(function() {
+     $("a.btn_pie", this).click(function() {
+         document.getElementById("enlaces1").style.display ="none";
+         document.getElementById("enlaces2").style.display ="none";
+         document.getElementById("enlaces0").style.display ="none";
+         return false;
+     }),
+      $("#pie .pie_sup a.btn_pie",this).mouseover(function(){
+          document.getElementById("enlaces1").style.display ="none";
+          document.getElementById("enlaces2").style.display ="none";
+          document.getElementById("enlaces0").style.display ="none";
+          document.getElementById("enlaces0").style.display ="block";
+          return false;
+      }),
+        $("#pie_otros_medios",this).mouseover(function(){
+            document.getElementById("enlaces1").style.display ="none";
+            document.getElementById("enlaces2").style.display ="none";
+            document.getElementById("enlaces0").style.display ="none";
+            document.getElementById("enlaces2").style.display ="block";
+            return false;
+        }),
+           $("#pie_asociados",this).mouseover(function(){
+               document.getElementById("enlaces1").style.display ="none";
+               document.getElementById("enlaces2").style.display ="none";
+               document.getElementById("enlaces0").style.display ="none";
+               document.getElementById("enlaces1").style.display ="block";
+               return false;
+           }),
+            $(document).ready( function() {
+                try {
+                    document.getElementById("enlaces1").style.display ="none";
+                    document.getElementById("enlaces2").style.display ="none";
+                    document.getElementById("enlaces0").style.display ="none";
+                } catch(e){}
+            }),
+               $("#pie_asociados",this).mouseout(function(){
+                   document.getElementById("enlaces1").style.display ="none";
+                   document.getElementById("enlaces2").style.display ="none";
+                   document.getElementById("enlaces0").style.display ="none";
+               }),
+               $("#enlaces1",this).mouseout(function(){
+                  document.getElementById(this.id).style.display ="none";
+
+               }),
+               $("#enlaces1",this).mouseover(function(){
+                   document.getElementById(this.id).style.display ="block";
+               }),
+               $("#enlaces0",this).mouseout(function(){
+                   document.getElementById(this.id).style.display="none";
+               }),
+               $("#enlaces0",this).mouseover(function(){
+                   document.getElementById(this.id).style.display ="block";
+               }),
+               $("#enlaces2",this).mouseout(function(){
+                   document.getElementById(this.id).style.display ="none";
+               }),
+               $("#enlaces2",this).mouseover(function(){
+                   document.getElementById(this.id).style.display="block";
+               }),
+               $("#pie_otros_medios",this).mouseout(function(){
+                   document.getElementById("enlaces1").style.display ="none";
+                   document.getElementById("enlaces2").style.display ="none";
+                   document.getElementById("enlaces0").style.display ="none";
+               }),
+               $("a.btn_pie",this).mouseout(function(){
+                   document.getElementById("enlaces1").style.display ="none";
+                   document.getElementById("enlaces2").style.display  ="none";
+                   document.getElementById("enlaces0").style.display  ="none";
+               })
+ });
+
+$(document).ready(function() {
+	$("div[id^='VideoPlayer_']").click(function(){
+		$(this).parent("span").parent("figure").parent().addClass("video_play");
+		var altura = $(this).height();
+		var ancho = $(this).width();
+		$(this).parent("span").parent("figure").css("min-height",altura);
+		$(this).parent("span").parent("figure").css("min-width",ancho);
+	});
+
+	if($("[id*=video_streaming]")){
+		$("[id*=video_streaming]").load(function(){
+			$(this).height($(this).parent().width() * $(this).height() / $(this).width());
+			$(this).width($(this).parent().width());
+		});
+	}
+});

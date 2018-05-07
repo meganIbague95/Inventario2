@@ -1,0 +1,652 @@
+if (typeof(protocolUrl) == "undefined" )
+    var protocolUrl = document.location.protocol;
+
+var navegacionSabanas = {
+	timer:null,
+	milisegundos:350,
+	init:function(){
+		if ("ontouchstart" in window || "ontouch" in window){$('#navegacion1 > ul > li > a').click(function(e){if($(this).parent().hasClass("actual") || $(this).parent().hasClass("as")){window.location=$(this).attr("href");}else{e.preventDefault();}});}
+        $('#navegacion1 > ul > li').mouseenter(function(){obj=this;clearTimeout(navegacionSabanas.timer);navegacionSabanas.timer=setTimeout(function(){navegacionSabanas.menuEnter(obj)},navegacionSabanas.milisegundos)});
+		$('header.header-interior').mouseleave(navegacionSabanas.menuOut);
+		$('header.header-interior > nav > section.sub-nav').mouseenter(function(){clearTimeout(navegacionSabanas.timer)});
+		$('#navegacion1 > ul > li:eq(0)').unbind('mouseenter');
+		$('#navegacion1 > ul > li:eq(0)').mouseover(navegacionSabanas.menuOut);
+	},
+
+	menuEnter:function(obj){
+		$('#navegacion1 > ul > li').removeClass('actual');
+		$(obj).addClass('actual');
+		$('header.header-interior > nav > section.sub-nav').hide();
+		if(!$('#wrapper_sabana_'+$(obj).attr('id').replace('menu_','')).html())
+            $('#wrapper_sabanas').append(sabanas[$(obj).attr('id').replace('menu_','sabana_')]);
+		if ($(obj).attr('id'))$('header.header-interior > nav > section.'+$(obj).attr('id').replace('menu_','')).show();
+	},
+
+	menuOut:function(){
+		clearTimeout(navegacionSabanas.timer);
+		navegacionSabanas.timer=setTimeout(function(){
+				$('#navegacion1 > ul > li').removeClass('actual');
+				$('header.header-interior > nav > section.sub-nav').hide();
+		},navegacionSabanas.milisegundos);
+
+	}
+}
+
+var desplegablesJS = {
+
+	init:function(){
+		$("ul.inl-list li.desplegable").mouseenter(desplegablesJS.mouseEnter).mouseleave(desplegablesJS.mouseOut);
+	},
+
+	mouseEnter:function(){
+		$(this).addClass('hdr-scn-active').children('div.hdr-in-scn-nav').show();
+	},
+
+	mouseOut:function(){
+		$(this).removeClass('hdr-scn-active').children('div.hdr-in-scn-nav').hide();
+	}
+
+}
+
+var historicoJS = {
+
+	init:function(){
+		$("ul.inl-list li[id^='historico']").mouseenter(historicoJS.mouseEnter).mouseleave(historicoJS.mouseOut);
+	},
+
+	mouseEnter:function(){
+		$(this).children('ul.tercerNiv').fadeIn(220);
+	},
+
+	mouseOut:function(){
+		$(this).children('ul.tercerNiv').fadeOut(100);
+	}
+
+}
+
+var selectorEdicionInternacional = {
+    init:function(){
+        $("#ed-selector .ed-selector-button").click(function(e){ e.preventDefault(); $("#ed-selector ul").show(); });
+        $("#ed-selector ul .sel").click(function(e){ e.preventDefault(); $("#ed-selector ul").hide(); });
+        $("#ed-selector ul").mouseleave(function(){  $("#ed-selector ul").hide(); });
+        $("#ed-selector-secciones .ed-selector-button").click(function(e){ $("#ed-selector-secciones ul").toggle(); });
+        $("#ed-selector-secciones ul").mouseleave(function(){  $("#ed-selector-secciones ul").hide(); });
+    }
+}
+
+var usuarioDisplay = {
+    init:function(){
+        $("#uu-display-button").click(function(e){ e.preventDefault(); $("#uu-display .hdr-usr-dropdown").show(); });
+        $("#uu-display .hdr-close").click(function(e){ e.preventDefault(); $("#uu-display .hdr-usr-dropdown").hide(); });
+        $("#uu-display .hdr-usr-dropdown").mouseleave(function(){  $("#uu-display .hdr-usr-dropdown").hide(); });
+    }
+}
+
+var estasLeyendo = {
+	init:function(){
+		var posTit = $('.titular-articulo').offset().top;
+		var posTopTit = posTit;
+		var menuHeight = $('.menu-principal').height();
+		var navHeight = $('.barra-nav-art').height();
+		var porDebajo = false;
+
+		posTopTit = $('.titular-articulo').offset().top;
+		menuHeight = $('.menu-principal').height();
+		navHeight = $('.barra-nav-art').height();
+		$('.barra-nav-art').css({'top':(0 - navHeight) +'px'});
+
+		$( window ).scroll(function() {
+			if($(window).scrollTop() >= posTopTit && porDebajo == false){
+				$(".barra-nav-art").show().animate({top: menuHeight +'px'},{queue:false});
+				porDebajo = true;
+			}else if($(window).scrollTop() < posTopTit && porDebajo == true){
+				$(".barra-nav-art").animate({top: (0 - navHeight) +'px'},{queue:false});
+				porDebajo = false;
+			}
+		});
+		$( window ).resize(function() {
+			posTopTit = $('.titular-articulo').offset().top;
+			menuHeight = $('.menu-principal').height();
+			navHeight = $('.barra-nav-art').height();
+			if (porDebajo == false) {
+				$('.barra-nav-art').css({'top':(0 - navHeight) +'px'});
+			}
+		});
+	}
+}
+
+if (typeof($)=="function"){
+	$(document).ready(function(){
+		/*
+		* Sábanas del menú de primer nivel
+		*/
+		navegacionSabanas.init();
+
+		/*
+		* Desplegables del menú de segundo nivel
+		*/
+		desplegablesJS.init();
+
+		/*
+		* Desplegables del histórico
+		*/
+		historicoJS.init();
+
+    /* Selector Edicion Internacional */
+    selectorEdicionInternacional.init();
+
+    /* Display Login Usuario */
+    usuarioDisplay.init();
+
+		/* Estás leyendo */
+		estasLeyendo.init();
+
+		/* Colocación de la publi */
+		if ($(window).width() < 992) {
+		    var numCharsMPU = 300;
+		    var numChars = 0;
+		    var numPar = 1;
+		    $('.int-articulo').find('p').each(function(n)
+		    {
+		        numChars += $(this).text().length;
+		        if (numChars > numCharsMPU)
+		        {
+		            numPar = n + 1;
+		            return false;
+		        }
+		    });
+			$('aside > div#gtp_diarioas_19753-MPU1').detach().insertAfter($('.int-articulo').find('>p:nth-of-type(' + numPar + ')'));
+        }
+
+	});
+}
+
+var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+var eventerMessage = window[eventMethod];
+var messageEvent = eventMethod == "attachEvent" ? "onmessage" : "message";
+
+eventerMessage(messageEvent,function(e) {
+    try{
+        var myJSON = eval('('+e.data+')');
+        $('#'+myJSON.id).height(myJSON.height);
+    }catch(e){}
+},false);
+
+$.extend({
+  getUrlVars: function(){
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+      hash = hashes[i].split('=');
+      vars.push(hash[0]);
+      vars[hash[0]] = hash[1];
+    }
+    return vars;
+  },
+  getUrlVar: function(name){
+    return $.getUrlVars()[name];
+  }
+});
+var userAgent = navigator.userAgent.toLowerCase();
+
+function dispositivoI() {
+	var types=["ipad","iphone","ipod"];
+	var numTypes=types.length;
+	for(var i=0;i<numTypes;i++)	{
+		if (userAgent.indexOf(types[i]) > -1 )
+		return true;
+	}
+	return false;
+}
+
+var iDevice = dispositivoI();
+var dispositivoMovil = iDevice || userAgent.indexOf("android") > -1;
+var fotoTamanioReal = false;
+
+var htmlCapaCentral = '<img alt="Precarga foto ampliada" src="/t.gif" id="imagen_contenedor"/>';
+var htmlCapaFlotante = '<a title="Cerrar" href="javascript:void(0);" id="id_cerrar_arriba" class="btn-cerrar" onclick="javascript:cerrarTelonMultimedia()">Cerrar</a>'+
+		'<figure class="item-multimedia">' +
+		'<div class="s-pr">' + htmlCapaCentral +
+		'<div id="ampliar" class="btn-multimedia"></div>' +
+    '</div><figcaption><p id="pie_contenedor" class="txt-img-art"></p></figcaption></figure>' +
+		'</div>';
+
+function teclaTelonEvent(e) {
+	if (e.keyCode == 27 ){
+		cerrarTelonMultimedia();
+	}
+}
+function marcadoAmpliaFoto(tituloPagina, fotoUrl) {
+	if (typeof(launchAjaxOMN) == "function") {
+		tituloPagina = tituloPagina.replace(/\|/g,"-");
+		tituloPagina = tituloPagina.replace(/"/g, "'");
+		DTM.trackEvent(DTM.events.PHOTOZOOM, {articleTitle: tituloPagina, photoURL: fotoUrl});
+	}
+}
+
+function bloqueaClick(e) {
+	if (!e) var e = window.event;
+	e.cancelBubble = true;
+	if (e.stopPropagation) e.stopPropagation();
+}
+
+function EPETalternacampos(id_campo1, estilo_campo1, id_campo2, estilo_campo2) {
+	document.getElementById(id_campo1).style.display = estilo_campo1;
+	document.getElementById(id_campo2).style.display = estilo_campo2;
+}
+
+function EPETgetVScrollPosition() {
+	if (typeof(document.documentElement.scrollTop) != "undefined" && document.documentElement.scrollTop)
+	return document.documentElement.scrollTop;
+	else
+	if (typeof(window.pageYOffset) != "undefined")
+	return window.pageYOffset;
+	else
+	return 0;
+}
+
+function EPETBrowserDims() {
+	var viewportwidth = 0;
+	var viewportheight = 0;
+	if (typeof window.innerWidth != 'undefined') {
+			viewportwidth = window.innerWidth,
+			viewportheight = window.innerHeight
+	} else if (typeof document.documentElement != 'undefined'
+		&& typeof document.documentElement.clientWidth !=
+		'undefined' && document.documentElement.clientWidth != 0) {
+		viewportwidth = document.documentElement.clientWidth,
+		viewportheight = document.documentElement.clientHeight
+	} else {
+		viewportwidth = document.getElementsByTagName('body')[0].clientWidth,
+		viewportheight = document.getElementsByTagName('body')[0].clientHeight
+	}
+	return {"ancho" : viewportwidth , "alto" : viewportheight};
+}
+
+function crearTelonMultimedia() {
+	if (document.getElementById("id_telon"))
+	document.getElementById("id_telon").parentNode.removeChild(document.getElementById("id_telon"));
+	if (document.getElementById("id_contenedorCapaFlotante"))
+	document.getElementById("id_contenedorCapaFlotante").parentNode.removeChild(document.getElementById("id_contenedorCapaFlotante"));
+	var telon = document.createElement('div');
+	telon.id = 'id_telon';
+	telon.style.display = 'none';
+	document.body.appendChild(telon);
+	var contenedor = document.createElement('div');
+	contenedor.className = "c-ampliar";
+	contenedor.id = 'id_contenedorCapaFlotante';
+	contenedor.style.display = 'none';
+	contenedor.style.overflow = 'auto';
+	contenedor.onclick = function() { cerrarTelonMultimedia();};
+	contenedor.innerHTML = htmlCapaFlotante;
+	document.body.appendChild(contenedor);
+}
+function cerrarTelonMultimedia() {
+	if (document.getElementById("id_telon").style.display != "none") {
+		EPETalternacampos('id_telon', 'none', 'id_contenedorCapaFlotante', 'none');
+		var nodoCentral = document.getElementById("contenedor_central_telon_txt");
+		var bodyTotal = document.getElementsByTagName('body')[0].style.overflow = 'auto';
+		//if (nodoCentral) //con esto se soluciona el error el cual solo se podia abrir una vez la foto.
+		//nodoCentral.innerHTML =  htmlCapaCentral;
+		if (window.addEventListener)
+		window.removeEventListener('keydown', teclaTelonEvent,true);
+		else
+		document.onkeydown = null;
+		}
+}
+function ampliaFoto(boton, url_foto, ancho_foto, alto_foto, pie_foto, alt_foto) {
+	var nodoCentral = document.getElementById("contenedor_central_telon");
+	var bodyTotal = document.getElementsByTagName('body')[0].style.overflow = 'hidden';
+	if (!nodoCentral)
+    	crearTelonMultimedia();
+
+	setTimeout(function() {
+	    if (ancho_foto > 0 && alto_foto > 0)
+    	{
+    	    setTimeout(function(){
+        	    ampliaFotoCallback(boton, url_foto, ancho_foto, alto_foto, pie_foto, alt_foto);
+    	    }, 100);
+    	}
+    	else
+    	{
+    	    var oculto = document.createElement('div');
+        	oculto.style.width = '0px';
+        	oculto.style.height = '0px';
+        	oculto.style.overflow = 'auto';
+        	document.body.appendChild(oculto);
+        	var oImg=document.createElement("img");
+        	oImg.onload = function() { ampliaFotoCallback(boton, url_foto, (this.naturalWidth != undefined ? this.naturalWidth : this.offsetWidth), (this.naturalHeight != undefined ? this.naturalHeight : this.offsetHeight), pie_foto, alt_foto); oculto.parentNode.removeChild(oculto) };
+        	oImg.setAttribute('src', url_foto + "?" + Math.random());
+        	oculto.appendChild(oImg);
+    	}
+	}, 100);
+}
+function ampliaFotoCallback(boton, url_foto, ancho_foto, alto_foto, pie_foto, alt_foto)
+{
+    var telon = document.getElementById('id_telon');
+    var capaFlotante = document.getElementById('id_contenedorCapaFlotante');
+    document.getElementById('ampliar').innerHTML= '<span class="as-icon-foto"></span>';
+    fotoTamanioReal = false;
+    var altoPie = 0 ;
+    if (telon != undefined  && capaFlotante != undefined )
+    {
+        pie_foto = pie_foto.replace(new RegExp("\&amp;", "gm"), "&");
+        pie_foto = pie_foto.replace(new RegExp("\&lt;", "gm"), "<");
+        pie_foto = pie_foto.replace(new RegExp("\&gt;", "gm"), ">");
+        document.getElementById('pie_contenedor').onclick = bloqueaClick;
+        EPETalternacampos('id_telon','block', 'id_contenedorCapaFlotante','block');
+        var dimsNavegador = EPETBrowserDims();
+        if (dispositivoMovil)
+        {
+            var altoBody = document.body.scrollHeight;
+            capaFlotante.style.position = 'fixed';
+        }
+        else
+        {
+            telon.style.position = 'fixed';
+        }
+        altoPie = document.getElementById('pie_contenedor').offsetHeight;
+        document.getElementById('pie_contenedor').innerHTML = pie_foto;
+        var YscrollVertical = EPETgetVScrollPosition();
+        var altoBloqueCentral = parseInt(alto_foto) + parseInt(altoPie) + 60;
+        if (altoBloqueCentral <= dimsNavegador.alto)
+        {
+            document.getElementById('ampliar').style.display = 'none';
+            if (dispositivoMovil)
+            {
+                capaFlotante.style.top=0;
+            }
+            else
+                capaFlotante.style.top=0;
+            capaFlotante.style.left = '0px';
+            //document.getElementById('imagen_contenedor').style.height = alto_foto + 'px';
+            //document.getElementById('imagen_contenedor').style.width = ancho_foto + 'px';
+            //document.getElementById('flotante_foto').style.width = (parseInt(ancho_foto) + 20) + "px";
+        }
+        else
+        {
+            if (dispositivoMovil)
+            {
+                capaFlotante.style.top=0;
+            }
+            else
+                altoPie = 55;
+            var imgH = dimsNavegador.alto - parseInt(altoPie) - 60;
+            var imgW = Math.round(imgH * ancho_foto / alto_foto);
+            //document.getElementById('imagen_contenedor').style.height = imgH + "px";
+            //document.getElementById('imagen_contenedor').style.width = imgW + "px";
+            //document.getElementById('flotante_foto').style.width = (imgW + 20) + "px";
+            document.getElementById('ampliar').style.display = 'block';
+            document.getElementById('ampliar').onclick = function (e) {
+                bloqueaClick(e);
+                if (!fotoTamanioReal)
+                {
+                    document.getElementById('ampliar').innerHTML= '<span class="as-icon-foto"></span>';
+                    capaFlotante.style.top=0;
+                    //document.getElementById('flotante_foto').style.width = (parseInt(ancho_foto) + 20) + "px";
+                    //document.getElementById('imagen_contenedor').style.width = ancho_foto + 'px';
+                    //document.getElementById('imagen_contenedor').style.height = alto_foto + 'px';
+                }
+                else
+                {
+                    document.getElementById('ampliar').innerHTML= '<span class="as-icon-foto"></span>';
+                    if (dispositivoMovil)
+                    {
+                        capaFlotante.style.top=0;
+                    }
+                    else
+                    {
+                        capaFlotante.style.top = '0px';
+                    }
+                    document.getElementById('imagen_contenedor').style.height = (dimsNavegador.alto - parseInt(altoPie) - 60) + "px";
+                    document.getElementById('imagen_contenedor').style.width = imgW + "px";
+                    //document.getElementById('flotante_foto').style.width = (imgW + 20) + "px";
+                }
+                fotoTamanioReal = !fotoTamanioReal;
+            };
+        }
+        document.getElementById('imagen_contenedor').onclick = bloqueaClick;
+        document.getElementById('imagen_contenedor').src    = url_foto;
+        if(alt_foto != undefined)
+            document.getElementById('imagen_contenedor').alt    = alt_foto;
+    	if (window.addEventListener) {
+			window.addEventListener('keydown', teclaTelonEvent,true);
+		}
+		marcadoAmpliaFoto(document.getElementsByTagName('title')[0] ? document.getElementsByTagName('title')[0].innerHTML : "", protocolUrl + '//ep00.epimg.net' + url_foto);
+	}
+}
+ $(document).ready(function() {
+     $("a.btn_pie", this).click(function() {
+         document.getElementById("enlaces1").style.display ="none";
+         document.getElementById("enlaces2").style.display ="none";
+         document.getElementById("enlaces0").style.display ="none";
+         return false;
+     }),
+      $("#pie .pie_sup a.btn_pie",this).mouseover(function(){
+          document.getElementById("enlaces1").style.display ="none";
+          document.getElementById("enlaces2").style.display ="none";
+          document.getElementById("enlaces0").style.display ="none";
+          document.getElementById("enlaces0").style.display ="block";
+          return false;
+      }),
+        $("#pie_otros_medios",this).mouseover(function(){
+            document.getElementById("enlaces1").style.display ="none";
+            document.getElementById("enlaces2").style.display ="none";
+            document.getElementById("enlaces0").style.display ="none";
+            document.getElementById("enlaces2").style.display ="block";
+            return false;
+        }),
+           $("#pie_asociados",this).mouseover(function(){
+               document.getElementById("enlaces1").style.display ="none";
+               document.getElementById("enlaces2").style.display ="none";
+               document.getElementById("enlaces0").style.display ="none";
+               document.getElementById("enlaces1").style.display ="block";
+               return false;
+           }),
+            $(document).ready( function() {
+                try {
+                    document.getElementById("enlaces1").style.display ="none";
+                    document.getElementById("enlaces2").style.display ="none";
+                    document.getElementById("enlaces0").style.display ="none";
+                } catch(e){}
+            }),
+               $("#pie_asociados",this).mouseout(function(){
+                   document.getElementById("enlaces1").style.display ="none";
+                   document.getElementById("enlaces2").style.display ="none";
+                   document.getElementById("enlaces0").style.display ="none";
+               }),
+               $("#enlaces1",this).mouseout(function(){
+                  document.getElementById(this.id).style.display ="none";
+
+               }),
+               $("#enlaces1",this).mouseover(function(){
+                   document.getElementById(this.id).style.display ="block";
+               }),
+               $("#enlaces0",this).mouseout(function(){
+                   document.getElementById(this.id).style.display="none";
+               }),
+               $("#enlaces0",this).mouseover(function(){
+                   document.getElementById(this.id).style.display ="block";
+               }),
+               $("#enlaces2",this).mouseout(function(){
+                   document.getElementById(this.id).style.display ="none";
+               }),
+               $("#enlaces2",this).mouseover(function(){
+                   document.getElementById(this.id).style.display="block";
+               }),
+               $("#pie_otros_medios",this).mouseout(function(){
+                   document.getElementById("enlaces1").style.display ="none";
+                   document.getElementById("enlaces2").style.display ="none";
+                   document.getElementById("enlaces0").style.display ="none";
+               }),
+               $("a.btn_pie",this).mouseout(function(){
+                   document.getElementById("enlaces1").style.display ="none";
+                   document.getElementById("enlaces2").style.display  ="none";
+                   document.getElementById("enlaces0").style.display  ="none";
+               })
+ });
+
+// FUNCIONES PARA CALCULO DE POSICION ABSOLUTA DE UN ELEMENTO EN UNA PAGINA
+
+function EPETUtils_calcAbsPosition(el) {
+    if (document.documentElement.getBoundingClientRect && el.getBoundingClientRect) { // IE
+        var box = el.getBoundingClientRect();
+        var rootNode;
+        if (el.ownerDocument) {
+            rootNode = el.ownerDocument;
+        } else {
+            rootNode = document;
+        }
+        return [box.left + Math.max(rootNode.documentElement.scrollLeft, rootNode.body.scrollLeft),
+                box.top + Math.max(rootNode.documentElement.scrollTop, rootNode.body.scrollTop)];
+    } else {
+        var pos = [el.offsetLeft, el.offsetTop];
+        var parentNode = el.offsetParent;
+
+        // safari: subtract body offsets if el is abs (or any offsetParent), unless body is offsetParent
+        var accountForBody = (isSafari &&
+                              el.style.position == 'absolute' &&
+                              el.offsetParent == el.ownerDocument.body);
+
+        if (parentNode != el) {
+            while (parentNode) {
+                pos[0] += parentNode.offsetLeft;
+                pos[1] += parentNode.offsetTop;
+                if (!accountForBody && isSafari &&
+                     parentNode.style.position == 'absolute' ) {
+                    accountForBody = true;
+                }
+                parentNode = parentNode.offsetParent;
+            }
+        }
+
+        if (accountForBody) { //safari doubles in this case
+            pos[0] -= el.ownerDocument.body.offsetLeft;
+            pos[1] -= el.ownerDocument.body.offsetTop;
+        }
+
+        if (el.parentNode) {
+            parentNode = el.parentNode;
+
+            // account for any scrolled ancestors
+            var ROOT_TAG = /^body|html$/i; // body for quirks mode, html for standards
+            while ( parentNode.tagName && !ROOT_TAG.test(parentNode.tagName) ) {
+               // work around opera inline/table scrollLeft/Top bug
+                if (parentNode.style.display.search(/^inline|table-row.*$/i)) {
+                    pos[0] -= parentNode.scrollLeft;
+                    pos[1] -= parentNode.scrollTop;
+                }
+
+                parentNode = parentNode.parentNode;
+            }
+        }
+
+        return pos;
+    }
+}
+
+$(document).ready(function() {
+    $("div[id^='VideoPlayer_']").click(function(){
+        var altura = $(this).height();
+        var ancho = $(this).width();
+        $(this).parent("span").parent("figure").css("min-height",altura);
+        $(this).parent("span").parent("figure").css("min-width",ancho);
+    });
+});
+
+
+// Colocación de barra de compartir en artículos
+$(document).ready(function(){
+
+    var posTit = $('.titular-articulo').offset().top;
+    var posTopTit = posTit;
+    var menuHeight = $('.menu-principal').height();
+    var navHeight = $('.barra-nav-art').height();   
+    var posRRSS = 0;
+    var porDebajoRRSS = false;
+    var porDebajo = false;
+    var ultimoScrollTop = 0
+    var animatePermitido = true;
+
+    function onScrollWin () {       
+
+        posTopTit = $('.titular-articulo').offset().top;
+        menuHeight = $('.menu-principal').height();
+        navHeight = $('.barra-nav-art').height();
+            
+        if($(window).scrollTop() >= posTopTit && porDebajo == false){
+            $(".barra-nav-art").show().animate({top: menuHeight +'px'},{queue:false});
+            $(".cont-nav-horizontal").toggleClass( "mostrar-nav-art" );
+            porDebajo = true;
+        }else if($(window).scrollTop() < posTopTit && porDebajo == true){
+            $(".barra-nav-art").animate({top: (0 - navHeight) +'px'},{queue:false});
+            $(".cont-nav-horizontal").toggleClass( "mostrar-nav-art" );
+            porDebajo = false;
+        }
+        
+        //...
+        //fixedRRSS ();
+        calcPerArt ();
+
+    };
+
+
+    function onResizeWin() {
+        
+        posTopTit = $('.titular-articulo').offset().top;
+        menuHeight = $('.menu-principal').height();
+        navHeight = $('.barra-nav-art').height();
+        
+        //check nueva altura
+        if (porDebajo == false) {
+            $('.barra-nav-art').css({'top':(0 - navHeight) +'px'});
+        } else {
+            $('.barra-nav-art').css({'top':menuHeight +'px'});
+        }
+
+        //...
+        //fixedRRSS ();
+        calcPerArt ();
+
+    }
+
+    function fixedRRSS () {
+
+        posRRSS = $('.cont-ppal-art .barra-utilidades').offset().top + $('.cont-ppal-art .barra-utilidades').height() - (menuHeight + navHeight);
+        
+        //La barra de RRSS se posiciona como FIXED abajo en mobile
+
+        if($(window).scrollTop() >= posRRSS && porDebajoRRSS == false){
+            $(".cont-ppal-art .barra-utilidades").toggleClass( "fixed" );
+            $(".cont-ppal-art .barra-utilidades ul").css({bottom:'-40px'}).animate({bottom: '0px'},{queue:false});
+            porDebajoRRSS = true;
+        }else if($(window).scrollTop() < posRRSS && porDebajoRRSS == true){
+            $(".cont-ppal-art .barra-utilidades").toggleClass( "fixed" );               
+            porDebajoRRSS = false;
+        }
+        
+    }
+
+    function calcPerArt () {
+
+        //... calculo de % de artículo...
+        var altoArt = $('.cont-ppal-art').height() - navHeight - menuHeight - $('.cont-art-tags').height();
+        var perArt = ($(window).scrollTop() - $('.cont-ppal-art').offset().top)*100 / altoArt ;
+        if (perArt < 0 ) perArt = 0;
+        if (perArt > 100) perArt = 100;
+        perArt += "%";
+        $('.barra-nav-art .art-progress .art-progress-bar').css({'width':perArt});
+
+    }
+
+    $(window).scroll(onScrollWin);
+    $(window).resize(onResizeWin);
+
+
+    //on init recolocamos la barra
+
+    onScrollWin();
+    onResizeWin();
+
+});

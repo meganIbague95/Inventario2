@@ -1,0 +1,140 @@
+/**
+ * Created by salva on 14/7/15.
+ * Modif mmromero 18/11/15
+ */
+//Evitamos que se replique
+if (typeof _configConnect == 'undefined'){
+    /*
+     *Inicializamos la variable para cargar la configuracion
+     */ 
+    var _configConnect;
+
+    /**
+     * Objeto controller para conectar con las distintas redes sociales
+     *
+     */
+    var socialNetworksController = new function(){
+        this.win = false;
+        this.backurl = null;
+        var me = this;
+
+        /**
+         * FUNCIONES PRIVADAS
+         * ------------------
+         */
+        /**
+         * Manejador del evento click
+         * Parametros:
+         * elementHtml->elemento html  donde se hace el click(<a>)
+         * conf->obj js con los valores particulares de urls, dominios etc
+         * network-> red a la que logueamos facebook,twitter,linkedin....
+         * backurl-> url a la que se volvera despues del login
+         */
+        this.handler = function (conf,network,redirectUri,params){   
+            _configConnect = conf;
+            this.params = params;
+            var redirect_uri = this.getUrlConnect(redirectUri);
+            redirect_uri = this.addParams(redirect_uri);
+            if (network){
+                var url = this.getUrlNetwork(network);
+                url = url + '?redirect_uri=' + encodeURIComponent(redirect_uri) + '&encode=1';
+                this.openWin(url, 475, 450);
+            }
+        }
+        
+        /**
+         * Abre una ventana con la url especificada
+         */
+        this.openWin = function(url, width, height){
+            var winWidth = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+            var winHeight = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight; 
+            var specs = "height="+height+",width="+width+",left="+((winWidth-width)/2)+",top="+((winHeight-height)/2)+",resizable=no";
+
+            // Si la ventana esta abierta
+            if (this.win){
+                this.win.close();
+                this.win = false;
+            }
+
+            document.domain = _configConnect.domain;
+            this.win = window.open(url, '', specs);
+            //Problem IE
+            try {
+                this.win.focus();
+            }catch(e){ }
+        }
+       
+
+        
+        /**
+         * Devuelve la URL del servidor de redes, donde se realizara el login en la red social
+         * http://dominio/connect/{network}/elpais/
+         */
+        this.getUrlNetwork = function(network){
+            var pattern = _configConnect.url_callback;
+            var url = pattern.replace('{network}', network);
+
+            return url;
+        }
+
+        /**
+         * Funcion que monta la url de conesion donde enviar  una vez da ok la red socila 
+         * es decir la url de login a esta se le añade url_window que tiene la url a 
+         * donde vuelve despues de el ok del login de prisa esta tiene puede tener el siguiente
+         * valor primero url pasada por parametro si no existe window.location finalmente la back de conf
+         */
+        this.getUrlConnect = function(redirectUri){
+            if(typeof redirectUri != 'undefined' && redirectUri != ''){
+                url_window = redirectUri;
+            }else if(document.getElementById('url_window')){ // para ie9
+                url_window = document.getElementById('url_window').value;
+            }else if (window.location.href){
+                url_window = window.location.href;
+            }else{
+                url_window = _configConnect.defaultBackUrl;
+            }
+        
+            if (url_window.match(/connect=/)) { 
+                url_window = url_window.replace(/(\?|\&)connect=\d{1}/,"");
+            }
+        
+            if (url_window.match(/d=/)) { 
+                url_window = url_window.replace(/(\?|\&)d=\d{1}/,"");
+            }           
+            url_window = encodeURIComponent(url_window);
+            
+            return _configConnect.urlRedirect+'?referer='+url_window;
+        }
+        
+        /**
+         *Funcion que anyade parametros a la url de crm se espera que this params sea
+         * un objeto tipo {prod:'REG',o:'concurso'}
+         */
+        this.addParams = function(url){
+            if(this.params != null && typeof this.params == 'object'){
+                var params ='';
+
+                for(var key in this.params) {
+                    params += key+'='+this.params[key]+'&';
+                }
+                params = params.slice(0, -1);
+
+                if(url.indexOf('?')>0){
+                    url += '&';
+                }else{
+                    url += '?';
+                }
+                url += params;
+            }
+            return url;
+        }
+       
+        /**
+         * FUNCIONES PUBLICAS
+         * ------------------
+         */
+        return {
+            connect : function(conf,network,redirectUri,params) {me.handler(conf,network,redirectUri,params); return false;},
+        }
+    }//end socialNetworksController 
+}

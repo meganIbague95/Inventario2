@@ -1,0 +1,86 @@
+var cX = cX || {};
+
+cX.callQueue = cX.callQueue || [];
+
+//Para hacer la sincronización de la cookie de Cxense con la de AS, necesitamos pasarle a la llamada al sendPageViewEvent de Cxense el valor de
+//la variable PEPuid (sólo para usuarios registrados, es decir, sólo para usuarios que tienen un valor asignado de PEPuname)
+//La llamada hay que hacerla con un retraso (de 500ms) porque las variables PEPuid y PEPuname se cargan en el body, y este script está en el head
+setTimeout("pushCxense();", 500);
+
+function pushCxense()
+{
+    cX.callQueue.push(['setSiteId', '9222275987287867960']);
+    //Sincronización cookie
+    cX.callQueue.push(['invoke',
+        function()
+        {
+            // if the PEPuname is defined the user is logged in
+            // so we can add the PEPuid to this request
+            if ( typeof PEPuname !== 'undefined')
+            {
+                cX.addExternalId(
+                {
+                    type : 'pri', id : PEPuid
+                });
+            }
+        }
+    ]);
+    cX.callQueue.push(['sendPageViewEvent']);
+}
+
+function incluirMeta(nombreMeta, valorMeta)
+{
+    meta = document.createElement('meta');
+    meta.setAttribute('name', nombreMeta);
+    meta.setAttribute('content', valorMeta);
+    document.getElementsByTagName('head')[0].appendChild(meta);
+}
+
+(function() { try { var scriptEl = document.createElement('script');
+scriptEl.type = 'text/javascript'; scriptEl.async = 'async';
+scriptEl.src = 'https://scdn.cxense.com/cx.js';
+var targetEl = document.getElementsByTagName('script')[0];
+targetEl.parentNode.insertBefore(scriptEl, targetEl); } catch (e) {};} ());
+    
+//Se crean metas de tags
+if (typeof (tags_listado_norm) != "undefined")
+{
+    var TAGS = tags_listado_norm.split(",");
+    var it;
+    var meta;
+    for ( it = 0; it < TAGS.length; it++)
+    {
+        incluirMeta('cXenseParse:pri-collabulary', TAGS[it]);
+    }
+}
+
+//Se crean metas de autores
+if (typeof (tags_listado_autores_norm) != "undefined")
+{
+    var TAGS = tags_listado_autores_norm.split(",");
+    var it;
+    var meta;
+    for ( it = 0; it < TAGS.length; it++)
+    {
+        incluirMeta('cXenseParse:pri-autor', TAGS[it]);
+    }
+}
+
+//Marcamos la página como artículo o frontpage en función de la URL
+var regexpNoticia = /http.?:\/\/([^\/]*)\/([^\/]*)\/(\d+)\/(\d+)\/(\d+)\/([^\/]*)\/.*\.html/i;
+var result_re = regexpNoticia.exec(window.location);
+var tipoPagina = (result_re) ? "article" : "frontpage";
+
+//Añadimos el meta pageclass para diferenciar los artículos de lar portadas/portadillas
+incluirMeta('cXenseParse:pageclass', tipoPagina);
+
+//Añadimos el meta articleid con el mismo patrón que id_articulo de las piezas del editor (portal_seccion_timestamp)
+if (tipoPagina == 'article')
+{
+    var url_actual = window.location.href;
+    var arr_url_actual = url_actual.split("/");
+    var portal = arr_url_actual[3];
+    var seccion = arr_url_actual[7];
+    var id_articulo = portal + "_" + seccion + "_" + arr_url_actual[8].substring(0, arr_url_actual[8].indexOf("."));
+    incluirMeta('cXenseParse:recs:articleid', id_articulo);
+}

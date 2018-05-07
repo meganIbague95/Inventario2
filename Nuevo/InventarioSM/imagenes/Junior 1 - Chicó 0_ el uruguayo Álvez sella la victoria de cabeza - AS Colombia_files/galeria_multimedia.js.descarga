@@ -1,0 +1,457 @@
+
+    galeriaMultimedia = function () {
+
+      var gal = this;
+      var interval = null;
+
+      //html targets
+      var target_id       = '';
+      var target_slick    = '.galeria-figures-wrapper-slick';
+      var target_slick_info   = '.picture-info-slick';
+      var target_nav      = '.picture-nav';
+      var target_nav_play   = '.picture-nav .as-icon-play';
+      var target_progress   = '.progressbar .progress';
+      var target_counter    = '.counter-progress .counter';            
+      var target_figures    = '.item-img-playpause';
+      var target_rel      = '.galeria-rel';
+      var arrow_next      = '.galeria-figures .arrow.next';
+      var arrow_prev      = '.galeria-figures .arrow.prev';
+
+      //
+      var percent = 0;
+      var current_pic = 0;
+      var paused = false;
+      var autoplay =  true;
+      var lastreached = false;
+      var ended = false;
+      
+      // config
+      var wait = 10000;         
+      var interval_delay = 50;  
+      var transition_fade = false;
+      var adaptive_height = false;
+      var start_pic = 0;    
+      var total_pics = 0;             
+      var buffer_pic = 1;
+      var has_counter = true;       //hay html para el contador de imaganes
+      var has_progressbar = true;     //hay html para la barra de progreso
+      var has_picpause = true;        //se puede pausar con click en la imagen
+      var has_infoslick = true;     //la info del pic estÃ¡ en otro slick
+      var has_rel = true;         //saca pantalla relacionadas al terminar
+     
+      gal.init = function ( config ) {
+
+        //cuidao ahi!
+
+        if (config !== undefined) {
+
+          if(config.target_id != undefined)        target_id = "#" + config.target_id;
+
+          if(config.wait !== undefined)             wait = config.wait;
+          if(config.interval_delay !== undefined)   interval_delay = config.interval_delay;
+          if(config.start_pic !== undefined)        start_pic = config.start_pic;
+          if(config.buffer_pic !== undefined)       buffer_pic = config.buffer_pic;
+          if(config.has_counter !== undefined)      has_counter = config.has_counter;
+          if(config.has_progressbar !== undefined)  has_progressbar = config.has_progressbar;
+          if(config.has_picpause !== undefined)     has_picpause = config.has_picpause;
+          if(config.has_infoslick !== undefined)    has_infoslick = config.has_infoslick;
+          if(config.has_rel !== undefined)          has_rel = config.has_rel;
+          if(config.autoplay !== undefined)         autoplay = config.autoplay;
+          if(config.transition_fade !== undefined)  transition_fade = config.transition_fade;          
+          if(config.adaptive_height !== undefined)  adaptive_height = config.adaptive_height;
+
+          //html targets
+          if(config.target_slick !== undefined)       target_slick = config.target_slick;
+          if(config.target_slick_info !== undefined)  target_slick_info = config.target_slick_info;
+          if(config.target_nav !== undefined)         target_nav = config.target_nav;
+          if(config.target_nav_play !== undefined)    target_nav_play = config.target_nav_play;
+          if(config.target_progress !== undefined)    target_progress = config.target_progress;
+          if(config.target_counter !== undefined)     target_counter = config.target_counter;
+          if(config.target_figures !== undefined)     target_figures = config.target_figures;
+
+        }
+
+
+        if (target_id != "") {
+
+          target_slick = target_id + " " + target_slick;
+          target_slick_info = target_id + " " + target_slick_info;         
+          target_nav = target_id + " " + target_nav;
+          target_nav_play = target_id + " " + target_nav_play;
+          target_progress = target_id + " " + target_progress;
+          target_counter = target_id + " " + target_counter;
+          target_figures = target_id + " " + target_figures;
+
+
+          target_rel      =  target_id + " " + '.galeria-rel';
+          arrow_next      =  target_id + " " + '.galeria-figures .arrow.next';
+          arrow_prev      =  target_id + " " + '.galeria-figures .arrow.prev';
+
+        }
+        
+
+        //...
+
+        gal.createSlick();
+        gal.createEvents();       
+        gal.startGallery();
+           
+      }
+
+      gal.startGallery = function () {
+
+        total_pics = $(target_slick + ' figure').length; 
+        gal.updateCounter();
+
+        gal.loadPic(start_pic); 
+
+        if (has_infoslick) $(target_slick_info).slick('slickGoTo',start_pic,true);
+        $(target_slick).slick('slickGoTo',start_pic,true);
+
+        if (autoplay) {
+          interval = setInterval(gal.updatePercent, interval_delay);          
+          gal.play();               
+        }
+
+      }
+
+      gal.loadPic = function ( id ) {
+
+        for (i=id-buffer_pic;i<=id+buffer_pic;i++) {
+
+          var loadtarget = $(target_slick + ' figure')[i];
+          var loadtargetimg = null;
+          
+          if (loadtarget !== undefined) {
+            
+            if ($(loadtarget).data('loaded') == 1) {
+              //console.log("ya estÃ¡ cargada!"); 
+            } else {
+              loadtarget = $(target_slick + ' figure')[i];
+              $(loadtarget).data('loaded', 1);
+              loadtargetimg = $(loadtarget).find('img');
+              loadtargetimg.attr({
+                src: $(loadtargetimg).data('src')
+              });
+
+              loadtargetimg.load(function() {
+          gal.checkPicAspect(this);
+              });
+            }
+
+          }
+
+        }               
+
+      }
+
+      gal.checkPicAspect = function ( target ) {
+
+        var sizeW = $(target).width();
+        var sizeH = $(target).height();
+
+        if (sizeW/sizeH > 1.55) $(target).removeClass('img-v').addClass('img-h');
+        else $(target).removeClass('img-h').addClass('img-v'); 
+        
+
+        // if (sizeW > sizeH) $(target).removeClass('img-v').addClass('img-h');
+        // else $(target).removeClass('img-h').addClass('img-v'); 
+        
+      }
+
+      gal.skipPic = function ( dir ) {
+
+        if (gal.checkPic(dir) ) {
+
+          if (dir === -1) {
+            
+            if (ended && lastreached) {
+
+              ended = false;
+              
+              $(target_nav).removeClass('disabled');
+              $(arrow_next).removeClass('disabled');
+
+              if(has_rel) {
+                $(target_rel).removeClass('animate').addClass('hidden');
+              }
+
+
+            } else  $(target_slick).slick('slickPrev');
+
+          } else
+            $(target_slick).slick('slickNext'); 
+          
+        } else {
+
+          if (current_pic == total_pics-1 && dir == 1) 
+            gal.endSlide();
+
+        }
+        
+      }
+
+      gal.checkPic = function ( dir ) {
+
+        if ((current_pic > 0 && dir == -1) || 
+          (current_pic < total_pics-1 && dir == 1)) {
+
+          if (dir == -1)                
+            return true;
+          else
+            return true;
+        
+        } else return false;
+
+      }
+
+      gal.endSlide = function () {
+
+        //clearInterval(interval);
+        paused = true;
+        ended = true;
+
+        $(target_nav).addClass('disabled');
+        $(arrow_next).addClass('disabled');
+        
+        //saca relacionadas al terminar
+        if(has_rel) {
+          $(target_rel).removeClass('hidden').addClass('animate');
+        }
+
+      }
+
+      gal.beforeChange = function () {
+
+        percent = 0;
+        gal.updateBar(percent);
+        gal.pause();
+
+      }
+
+      gal.afterChange = function () {
+
+        current_pic = $(target_slick).slick('slickCurrentSlide');
+        gal.updateCounter ();
+
+        if (current_pic == 0) $(arrow_prev).addClass('disabled');
+        else $(arrow_prev).removeClass('disabled');
+
+        if (current_pic == total_pics-1) {
+          lastreached = true;
+        } else {
+          lastreached = false;            
+        }
+        
+        if (autoplay && !ended) 
+          gal.play();
+
+        //carga las siguientes!
+        gal.loadPic(current_pic);
+
+      }
+
+      gal.play = function () {
+
+        paused = false;
+        $(target_nav_play).addClass('playing');
+                
+      }
+
+      gal.pause = function () {
+     
+        paused = true;  
+        $(target_nav_play).removeClass('playing');
+        
+        
+      }
+
+      gal.playPause = function () {
+        
+        if (paused) {
+      
+          gal.setAutoplay(true);
+          $(target_figures).removeClass('playing').addClass('animate-play').removeClass('animate-pause');
+          gal.play();
+          
+        } else {
+          
+          gal.setAutoplay(false);
+          $(target_figures).addClass('playing').addClass('animate-pause').removeClass('animate-play');
+          gal.pause();
+
+        }
+
+      }     
+
+      gal.setAutoplay = function (auto) {
+
+        if(typeof(auto) === "boolean")
+          autoplay = auto;
+
+      }
+
+      gal.getAutoplay = function () {
+
+        return autoplay;
+      }
+      
+      gal.updatePercent = function () {
+        
+        if (!paused) {
+
+          percent += interval_delay/wait;           
+
+          if (percent >= 1) {
+
+            gal.pause();
+            gal.skipPic(1); 
+            
+          }
+
+          gal.updateBar(percent);
+
+        }
+    
+      }
+
+      //... update html
+
+      gal.updateCounter = function () { 
+        
+        if (has_counter)
+          $(target_counter).html("<span class='current-item'>"+ (current_pic+1) +"</span> / "+ total_pics +"</span>");     
+
+      }
+
+      gal.updateBar = function (per) {
+        
+        if (has_progressbar)
+          $(target_progress).css({'transform':'scale(' + per +',1)'});
+
+      }
+
+      //... create slicks
+
+      gal.createSlick = function () {
+
+        var asnavfor = '';
+
+        if (has_infoslick) {
+
+          asnavfor = target_slick_info;
+
+          $(target_slick_info).slick({
+            slidesToShow: 1,
+            infinite:false,
+            dots: false,
+            swipe: false,
+            adaptiveHeight: true, 
+            draggable: false,
+            useTransform: true,       
+            speed: 350,
+            arrows:false,
+            fade: transition_fade,
+            cssEase: 'ease-in-out',             
+            responsive: [
+            {
+              breakpoint: 1099,
+                settings: {
+                  fade:true
+                }
+            },
+            {
+              breakpoint: 768,
+                settings: {
+                  fade:true
+                }
+            }
+            ]
+          });
+
+        }
+        
+        $(target_slick).slick({
+
+          slidesToShow: 1,
+          infinite:false,
+          dots: false,
+          arrows: false,
+          adaptiveHeight: adaptive_height, 
+          draggable: false,
+          useTransform: true,
+          speed: 700,
+          slide:'figure',
+          cssEase: 'ease-in-out',       
+          asNavFor: target_slick_info,    
+          responsive: [
+            {
+            breakpoint: 1024,
+              settings: {
+                draggable: true       
+              }
+            }
+          ]
+
+        });
+
+      }
+
+      //... attach events
+
+      gal.createEvents = function () {
+
+        //btn play en nav
+        $(target_nav_play).click(function(e){
+              e.preventDefault();
+              gal.playPause();
+            })
+
+        //btn volver
+            $(target_id + ' .btn-volver').click(function(e){
+              e.preventDefault();
+              gal.skipPic(-1);
+              gal.setAutoplay(false); 
+            })
+
+            //arrows
+            $(arrow_next).click(function(e){
+              e.preventDefault();
+              gal.skipPic(1);
+              gal.setAutoplay(false); 
+            })
+
+            $(arrow_prev).click(function(e){
+              e.preventDefault();
+              gal.skipPic(-1);
+              gal.setAutoplay(false); 
+            })   
+
+            //click picture
+            $(target_figures).click(function(e){
+              e.preventDefault();
+              if (has_picpause) {
+                gal.playPause();                
+              }
+            })   
+
+
+        //slick
+        $(target_slick).on('swipe', function(event, slick, direction){
+           gal.setAutoplay(false);      
+        });
+            
+        $(target_slick).on('edge', function(e, slick, direction){ 
+          if (direction === "left") gal.endSlide();       
+        });
+        
+        $(target_slick).on('beforeChange', function(e, slick, currentSlide, nextSlide){       
+            gal.beforeChange();         
+        });
+
+        $(target_slick).on('afterChange', function(e, slick, currentSlide, nextSlide){    
+          gal.afterChange();
+        });
+      }
+
+    }

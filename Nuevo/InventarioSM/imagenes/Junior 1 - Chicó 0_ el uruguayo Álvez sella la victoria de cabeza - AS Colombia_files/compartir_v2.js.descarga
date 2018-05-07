@@ -1,0 +1,847 @@
+if (typeof(Array.isArray) == "undefined"){
+	Array.isArray = function(obj){
+		return (typeof(obj) == "object") && (obj.constructor == Array);
+	}
+}
+
+var __g_twitter_via;
+
+function EPETalternacampos(id_campo1, estilo_campo1, id_campo2, estilo_campo2) {
+    document.getElementById(id_campo1).style.display = estilo_campo1;
+    document.getElementById(id_campo2).style.display = estilo_campo2;
+}
+
+function EPETavanzaAutor(id_autor, id_autor_siguiente, id_autor_anterior) {
+    document.getElementById('caja_autor_' + id_autor_siguiente).style.display = '';
+    document.getElementById('paginacion_' + id_autor_siguiente).style.display = '';
+    document.getElementById('caja_autor_' + id_autor).style.display = 'none';
+    document.getElementById('paginacion_' + id_autor).style.display = 'none';
+}
+
+function EPETretrocedeAutor(id_autor, id_autor_siguiente, id_autor_anterior) {
+    document.getElementById('caja_autor_' + id_autor_anterior).style.display = '';
+    document.getElementById('paginacion_' + id_autor_anterior).style.display = '';
+    document.getElementById('caja_autor_' + id_autor).style.display = 'none';
+    document.getElementById('paginacion_' + id_autor).style.display = 'none';
+}
+
+function EPETshowHideTags (divId) {
+    var objTags = document.getElementById(divId);
+    objTags.className+=" alto_limitado";
+    var height = objTags.scrollHeight;
+    if ( height < 47 ) {
+        // No hay mas de dos filas de tags, dibujo una linea
+        var span =  document.createElement("SPAN");
+        span.className = 'linea';
+        span.style.display = 'block';
+        objTags.parentNode.appendChild(span);
+
+    } else {
+        objTags.style.maxHeight    = '';
+        // Hay mas de dos filas, saco el boton para mostrar
+        var linkOpen = document.createElement('A');
+        linkOpen.className = 'mostrar';
+        linkOpen.title = 'Mostrar más';
+        linkOpen.style.display = 'block';
+        linkOpen.href = "javascript:void(0);";
+
+        var linkClose = document.createElement('A');
+        linkClose.className = 'ocultar';
+        linkClose.title = 'Ocultar';
+        linkClose.style.display = 'none';
+        linkClose.href = "javascript:void(0);";
+
+        linkOpen.onclick = function() {
+            //objTags.style.maxHeight    = '';
+            linkOpen.style.display  = 'none';
+            linkClose.style.display = 'block';
+            objTags.className+=" alto_libre";
+            objTags.className=objTags.className.replace(' alto_limitado',"");
+        };
+        linkClose.onclick = function() {
+            //objTags.style.maxHeight    = '37px';
+            linkOpen.style.display  = 'block';
+            linkClose.style.display = 'none';
+            objTags.className+=" alto_limitado";
+            objTags.className=objTags.className.replace(' alto_libre',"");
+        };
+
+        objTags.parentNode.appendChild(linkOpen);
+        objTags.parentNode.appendChild(linkClose);
+    }
+} // EPETshowHideTags
+
+// Una simulacion de sprintf
+if (!String.prototype.format) {
+  String.prototype.format = function() {
+    var args = arguments;
+    return this.replace(/{(\d+)}/g, function(match, number) {
+      return typeof args[number] != 'undefined'
+      ? args[number]
+      : match
+      ;
+  });
+};
+}
+
+function getDataFromProperty(_metaName) {
+    var metas = document.getElementsByTagName('meta');
+    for (var i=0; i<metas.length; i++) {
+        if (metas[i].getAttribute("property") == _metaName) {
+            return metas[i].getAttribute("content");
+        }
+    }
+    return "";
+}
+function getTitleFromMeta() {
+    return getDataFromProperty('og:title')
+}
+
+if ( typeof(c_via) == 'undefined' || c_via == '' ){
+    var c_via = '@'+ __g_twitter_via;
+    if (typeof(account_twitter) != 'undefined') {
+       c_via = account_twitter;
+   }
+    //var c_via = getDataFromProperty('twitter:site');
+}
+c_via = c_via.split('@');
+c_via = c_via[1] || c_via[0];
+
+if( ( c_media == '' || typeof(c_media) == 'undefined') ) {
+    var c_media = encodeURI(getDataFromProperty('og:image'));
+}
+
+if( ( c_description == '' || typeof(c_description) == 'undefined') ) {
+    var c_description = encodeURIComponent(getDataFromProperty('og:description'));
+}
+
+if( ( c_title == '' || typeof(c_title) == 'undefined') ) {
+    var c_title = encodeURIComponent(getDataFromProperty('og:title'));
+}
+
+if ( typeof(c_url) == 'undefined' || c_url == '' ) {
+    var c_url = getDataFromProperty('og:url');
+    c_url = c_url.replace(/.html.*$/gi, ".html");
+    c_url = c_url.replace(/\/album-\d+\//gi, "/album/");
+}
+
+var regex = /(^.+\.html)(\?|#).*$/;
+if ( regex.test (c_url) ) {
+    c_url = c_url.replace(regex, '$1' );
+}
+
+var params = {
+    url         : c_url,
+    text        : c_title,
+    via         : c_via,
+    media       : c_media,
+    description : c_description
+};
+
+var GlobRecvCount = {
+    twitter:  new Array(),
+    facebook: new Array(),
+    linkedIn: new Array(),
+    google:   new Array()
+}
+
+function EPETSocial(_red, _aElements, _countDivs, _params){
+    this.red        = _red || 'void';
+    this.aElements  = _aElements || [];
+    this.countDivs  = _countDivs || [];
+    this.objNum     = 0;
+    if ( typeof(_params) != "undefined" ) {
+        this.url        = _params['url']  || params ['url'];
+        this.text       = _params['text'] || params['text'];
+        this.via        = _params['via']  || params['via'];
+    } else {
+        this.url        = params ['url'];
+        this.text       = params['text'];
+        this.via        = params['via'];
+    }
+
+    this.url            = this.url.toLowerCase();
+
+    this.ancho          = 550;
+    this.alto           = 450;
+    this.shareTitulo    = 'Recomendar';
+    this.searchTitulo   = 'Buscar';
+}
+
+EPETSocial.prototype.shared = function (e) {
+    return e.clicked(this.share,this.shareTitulo);
+}
+
+EPETSocial.prototype.searched = function (obj) {
+    return obj.clicked(this.searchCall,this.searchTitulo);
+}
+
+EPETSocial.prototype.clicked = function (_urlClick, _titulo) {
+    var sheight = screen.height;
+    var swidth  = screen.width;
+
+    var left = Math.round((swidth/2)-(this.ancho/2));
+
+    var top  = (sheight>this.alto)? Math.round((sheight/2)-(this.alto/2)) : 0;
+
+
+    var win  = window.open(_urlClick, _titulo, "left="+left+",top="+top+",width="+this.ancho+",height="+this.alto+",personalbar=0,toolbar=0,scrollbars=1,resizable=1");
+    if (win) {
+        win.focus();
+    }
+}
+
+EPETSocial.prototype.fillCount = function() {
+    if (!this.countCall)
+        return false;
+    var scriptElement = document.createElement("script");
+    scriptElement.type  = "text/javascript";
+    scriptElement.src   = this.countCall.format(this.objNum);
+    document.body.appendChild(scriptElement);
+} // prototype fillCount
+
+
+/* Separate thousands with dot */
+EPETSocial.prototype.processCount = function (count) {
+    var cad = '';
+    if (count > 999999) {
+        count = count/1000000;
+        cad = ' MM';
+    } else if (count > 9999) {
+        count = count/1000;
+        cad = ' Mil';
+    }
+    count = Math.floor(count);
+    count += '';
+    var regex = /(\d+)(\d{3})/;
+    while (regex.test(count)) {
+        count = count.replace(regex, '$1' + '.' + '$2');
+    }
+
+    return count+cad;
+} // processCount
+
+/* Receive count from the callback and fill in */
+EPETSocial.prototype.recvCount = function(json) {
+    var count = this.getJsonCount(json);
+    var that = this;
+    count = this.processCount(count);
+    if (Array.isArray(this.countDivs)){
+        for (var i in this.countDivs) {
+            var element = document.getElementById(this.countDivs[i]);
+            if (element) {
+                if (typeof this.searchCall != "undefined") { addEventById(this.countDivs[i],'click',function(e){ that.searched(that);e.stopPropagation();e.preventDefault()}); }
+                element.innerHTML = count;
+            }
+        }
+    } else {
+        var element = document.getElementById(this.countDivs);
+        if (element){
+            if (typeof this.searchCall != "undefined") { addEventById(this.countDivs[i],'click',function(e){ that.searched(that);e.stopPropagation();}); }
+            element.innerHTML = count;
+        }
+    }
+
+} // recvCount
+
+EPETSocial.prototype.run = function() {
+    this.objNum = GlobRecvCount[this.red].push(this) - 1;
+
+    /* Running actual code */
+    var that = this;
+
+    if (Array.isArray(this.aElements)){
+      for (var i in this.aElements) {
+        addEventById(this.aElements[i],'click',function(){ that.shared(that)});
+      }
+    } else {
+      addEventById(this.aElements,'click',function(){ that.shared(that)});
+    }
+
+    this.fillCount(), 100;
+
+} // run
+
+
+/*
+ * Objeto Facebook
+ *
+ */
+
+function Facebook(_aElements, _countDivs, _params) {
+    /* The ref to the caller and the countDiv element is a must */
+    if ( !_aElements )
+        return false;
+
+    if ( !_countDivs )
+        return false;
+
+    url = this.url;
+    if(_params != undefined ){
+        if(_params['url']){
+            url = _params['url'];
+        }
+    }
+
+    url_parts = url.split('#');
+    new_url = url_parts[0] + '?id_externo_rsoc=comp_fb';
+    if(url_parts[1]){
+        new_url += '#'+url_parts[1];
+    }
+    url = new_url;
+
+    EPETSocial.call(this,'facebook', _aElements, _countDivs, _params);
+    this.share      = 'http://www.facebook.com/sharer.php?u='+encodeURIComponent(url)+'&t='+this.text;
+    //this.countCall  = 'https://api.facebook.com/method/fql.query?query=select%20total_count%20from%20link_stat%20where%20url=%22' + encodeURIComponent(url) + '%22&format=json&callback=GlobRecvCount.facebook[{0}].recvCount';
+
+} // Facebook
+
+Facebook.prototype = new EPETSocial;
+Facebook.prototype.getJsonCount = function (json) { if (Array.isArray(json)) {return json[0].total_count || 0;} else {return 0}}
+
+/*
+ * Objeto Twitter
+ *
+ */
+
+function Twitter(_aElements, _countDivs, _params) {
+    /* The ref to the caller and the countDiv element is a must */
+    if ( !_aElements  )
+        return false;
+
+    if ( !_countDivs )
+        return false;
+
+    url = this.url;
+    if(_params != undefined){
+        if(_params['url']){
+            url = _params['url'];
+        }
+    }
+
+    url_parts = url.split('#');
+    new_url = url_parts[0] + '?id_externo_rsoc=comp_tw';
+    if(url_parts[1]){
+        new_url += '#'+url_parts[1];
+    }
+    url = new_url;
+
+    this.share      = 'http://twitter.com/share?url=' + encodeURIComponent(url) + '&via=' + __g_twitter_via + '&text=' + this.text;
+    //this.countCall  = 'http://urls.api.twitter.com/1/urls/count.json?url=' + encodeURIComponent(url) + '&callback=GlobRecvCount.twitter[{0}].recvCount';
+    this.searchCall = 'http://twitter.com/search?q=' + encodeURIComponent(url);
+    EPETSocial.call(this,'twitter', _aElements, _countDivs, _params);
+
+} // Twitter
+
+Twitter.prototype = new EPETSocial;
+Twitter.prototype.getJsonCount = function (json) { return json.count || 0;}
+
+/*
+ * Objeto LinkedIn
+ *
+ */
+
+function LinkedIn(_aElements, _countDivs, _params) {
+    /* The ref to the caller and the countDiv element is a must */
+    if ( !_aElements  )
+        return false;
+
+    if ( !_countDivs )
+        return false;
+
+    url = this.url;
+    if(_params != undefined){
+        if(_params['url']){
+            url = _params['url'];
+        }
+    }
+
+    EPETSocial.call(this,'linkedIn', _aElements, _countDivs, _params);
+    var ts          = new Date().getTime();
+    this.share      = 'http://www.linkedin.com/cws/share?url=' + encodeURIComponent(url) + '&original_referer=' + encodeURIComponent(url) + '&token=&isFramed=false&lang=es_ES&_ts=' + ts;
+    //this.countCall  = 'http://www.linkedin.com/countserv/count/share?url=' + encodeURIComponent(url) + '&callback=GlobRecvCount.linkedIn[{0}].recvCount';
+
+} // LinkedIn
+
+LinkedIn.prototype = new EPETSocial;
+LinkedIn.prototype.getJsonCount = function (json) { return json.count || 0;}
+
+
+/*
+ * Objeto GooglePlus
+ *
+ */
+
+function GooglePlus(_aElements, _countDivs, _params) {
+
+    /* The ref to the caller and the countDiv element is a must */
+    if ( !_aElements )
+        return false;
+
+    if ( !_countDivs )
+        return false;
+
+    url = this.url;
+    if(typeof _params !== 'undefined'){
+        if(_params['url']){
+            url = _params['url'];
+        }
+    }
+
+    url_parts = url.split('#');
+    new_url = url_parts[0] + '?id_externo_rsoc=comp_gp';
+    if(url_parts[1]){
+        new_url += '#'+url_parts[1];
+    }
+    url = new_url;
+
+    EPETSocial.call(this,'google', _aElements, _countDivs, _params);
+    this.share       = 'https://plus.google.com/share?url='+encodeURIComponent(url);
+    //this.countCall  = 'https://clients6.google.com/rpc';
+    this.postFields = '[{"method":"pos.plusones.get","id":"p","params":{"nolog":true,"id":"' +url+ '","source":"widget","userId":"@'+this.via+'viewer","groupId":"@self"},"jsonrpc":"2.0","key":"p","apiVersion":"v1"}]';
+
+} // GooglePlus
+
+GooglePlus.prototype = new EPETSocial;
+GooglePlus.prototype.getJsonCount = function (json) {
+    if (json.status == 404)
+        return 0;
+    var objJSON = JSON.parse(json.responseText);
+    return objJSON[0].result.metadata.globalCounts.count;
+
+}
+GooglePlus.prototype.fillCount = function() {
+    var that = this;
+    EPETUtils_makeHttpRequest(function (_json) { that.recvCount(_json); },this.countCall,this.postFields, 'application/json');
+} // GooglePlus.fillCount
+
+function EPETShare(call, _ancho, _alto) {
+    if ( !call )
+        return false;
+
+    var width   = _ancho || 550;
+    var height  = _alto  || 450;
+
+    var sheight = screen.height;
+    var swidth  = screen.width;
+
+    var left = Math.round((swidth/2)-(width/2));
+    var top  = (sheight>height)? Math.round((sheight/2)-(height/2)) : 0;
+
+    var win  = window.open(call, "Recomendar", "left="+left+",top="+top+",width="+width+",height="+height+",personalbar=0,toolbar=0,scrollbars=1,resizable=1");
+    if (win) {
+        win.focus();
+    }
+
+    return true;
+}
+
+
+/*
+ * Objeto para el envio de una noticia por correo
+ *
+ */
+
+function EPETMail( _button, _div, _user ) {
+    /* Properties */
+    if ( !_user )
+        return false;
+
+    if ( _user == '' )
+      return false;
+
+  var QueryUrl = '/s/enviaNoticiaCorreo.plr?url=';
+
+  var SelfUrl = window.location.pathname;
+
+  var Header;
+
+  var Greeting;
+  var SendForm;
+
+  var Ok;
+  var Error;
+
+  var Address;
+  var Comment;
+
+  var User   = _user;
+  var Button = _button;
+  var Div    = _div;
+
+  var req;
+
+  /* Methods */
+
+  function sendData() {
+    var url = QueryUrl + SelfUrl + '&to=' + Address.value;
+    if ( Comment.value )
+        url += '&txt=' + Comment.value;
+
+        // branch for native XMLHttpRequest object
+        if (window.XMLHttpRequest) {
+            req = new XMLHttpRequest();
+            req.onreadystatechange = showResult;
+            req.open("GET", url, true);
+            req.send(null);
+            // branch for IE/Windows ActiveX version
+        } else if (window.ActiveXObject) {
+            isIE = true;
+            req = new ActiveXObject("Microsoft.XMLHTTP");
+            if (req) {
+                req.onreadystatechange = showResult;
+                req.open("GET", url, true);
+                req.send();
+            }
+        }
+        return true;
+    } // sendData
+
+    function showResult() {
+     // only if req shows "loaded"
+     if (req.readyState == 4) {
+            // only if "OK"
+            if (req.status == 200) {
+                var json;
+                eval( 'json = ' + req.responseText  + ';');
+
+                if ( json.status == 'ok' ) {
+                    //Div.innerHTML = '';
+                    //Div.appendChild ( Header );
+                    if ( SendForm )
+                        if ( SendForm.parentNode )
+                            SendForm.parentNode.removeChild(SendForm);
+
+                        if ( Greeting )
+                            if ( Greeting.parentNode )
+                                Greeting.parentNode.removeChild(Greeting);
+
+                    Div.appendChild ( Ok );
+                } else if ( json.status == 'error' ) {
+                    //Div.innerHTML = '';
+                    //Div.appendChild ( Header );
+                    if ( SendForm )
+                        if ( SendForm.parentNode )
+                            SendForm.parentNode.removeChild(SendForm);
+
+                    if ( Greeting )
+                        if ( Greeting.parentNode )
+                            Greeting.parentNode.removeChild(Greeting);
+                    Error.innerHTML = json.info;
+                    Div.appendChild ( Error );
+                }
+            } else {
+                alert("There was a problem retrieving the data:\n" + req.statusText);
+            }
+        }
+    }
+
+
+    function createHeader() {
+        var headerDiv = document.createElement('DIV');
+        headerDiv.className = 'encabezado estirar';
+
+        var pElement = document.createElement('p');
+        pElement.innerHTML = 'Enviar noticia por correo electrónico';
+
+        var closeElement = document.createElement('A');
+        closeElement.onclick   = function() {
+            Div.style.display = 'none';
+        }
+        closeElement.title     = "Cerrar";
+        closeElement.className = "cerrar";
+        closeElement.href      = "javascript:void(0);";
+
+        headerDiv.appendChild(pElement);
+        headerDiv.appendChild(closeElement);
+
+        Header = headerDiv;
+
+        return true;
+
+    } // createHeader
+
+    function createSendForm() {
+
+        if ( ! Greeting ) {
+            var greetingElement = document.createElement('P');
+            greetingElement.innerHTML  = 'Hola, <a title="Ver perfil" href="javascript:void(0);">' + User + '</a>';  // FIXME Hay que poner lo del perfil
+
+            Greeting = greetingElement;
+        }
+
+        if ( ! SendForm ) {
+            var formElement = document.createElement('FORM');
+            var fieldsetElement = document.createElement('FIELDSET');
+
+            var legendElement = document.createElement('LEGEND');
+            legendElement.innerHTML = 'Enviar noticia por correo electrónico';
+
+            var labelElement = document.createElement('LABEL');
+            //labelElement.for = 'direccion';
+            labelElement.innerHTML = 'Introduce la dirección de correo del destinatario:';
+
+            var inputElement        = document.createElement('INPUT');
+            inputElement.type       = 'text';
+            inputElement.autofocus  = 'autofocus';
+            inputElement.name       = 'direccion';
+            inputElement.id         = 'direccion';
+
+            Address = inputElement;
+
+            var labelCommentElement       = document.createElement('LABEL');
+            //labelCommentElement.for       = 'comentario';
+            labelCommentElement.innerHTML = 'Tu comentario (opcional):';
+
+            var textAreaElement  = document.createElement('TEXTAREA');
+            //textAreaElement.cols = 0;
+            textAreaElement.rows = 20;
+            textAreaElement.name = 'comentario';
+            Comment = textAreaElement;
+
+            var divElement       = document.createElement('DIV');
+            divElement.className = 'estirar';
+
+            var textElement = document.createElement('P');
+            textElement.className = 'aclaracion';
+            textElement.innerHTML = 'El correo llegará al destinatario firmado con tu nombre';
+
+            var submitElement = document.createElement('INPUT');
+            submitElement.className = 'enviar';
+            submitElement.type = 'submit';
+            submitElement.value = 'Enviar';
+            submitElement.onclick = function() {
+                if ( Address.value == '' )
+                    return false;
+
+                sendData();
+                return false;
+            }
+
+            divElement.appendChild(textElement);
+            divElement.appendChild(submitElement);
+
+
+            fieldsetElement.appendChild(legendElement);
+            fieldsetElement.appendChild(labelElement);
+            fieldsetElement.appendChild(inputElement);
+            fieldsetElement.appendChild(labelCommentElement);
+            fieldsetElement.appendChild(textAreaElement);
+            fieldsetElement.appendChild(divElement);
+
+            formElement.appendChild(fieldsetElement);
+
+            SendForm = formElement;
+        }
+
+        return true;
+
+    } // createSendForm
+
+    function createReturnElements() {
+        if ( ! Ok ) {
+            var okElement = document.createElement('P');
+            okElement.className = 'ok';
+            okElement.innerHTML = 'Tu correo se ha enviado correctamente';
+
+            Ok = okElement;
+        }
+
+        if ( ! Error ) {
+            var errorElement = document.createElement('P');
+            errorElement.className = 'error';
+
+            Error = errorElement;
+        }
+
+        return true;
+    } // createReturnElements
+
+    function initialize() {
+
+        if ( Header )
+            if ( Header.parentNode )
+                Header.parentNode.removeChild(Header);
+
+        createHeader();
+
+
+        if ( SendForm )
+            if ( SendForm.parentNode )
+                SendForm.parentNode.removeChild(SendForm);
+
+        if ( Greeting )
+            if ( Greeting.parentNode )
+                Greeting.parentNode.removeChild(Greeting);
+
+        createSendForm();
+
+
+        if ( Ok )
+            if ( Ok.parentNode )
+                Ok.parentNode.removeChild(Ok);
+
+        if ( Error )
+            if ( Error.parentNode )
+                Error.parentNode.removeChild(Error);
+
+        createReturnElements();
+
+        Address.value = '';
+        Comment.value = '';
+
+        Div.innerHTML = '';
+        Div.appendChild ( Header );
+        Div.appendChild ( Greeting );
+        Div.appendChild ( SendForm );
+
+    } // initialize
+
+    /* Code */
+
+
+    Button.onclick = function() {
+        initialize()
+        Div.style.display = 'block';
+        Address.focus();
+    }
+} // EPETMail
+
+// contador para crear id's únicos
+addEvent.guid = 1;
+
+// Añadir un evento a un Objeto dado
+function addEvent(element, type, handler) {
+  // asignamos a cada manejador de evento un id único
+  if (!handler.$$guid) handler.$$guid = addEvent.guid++;
+
+  // inicializar el hash de tipos de eventos para cada elemento
+  if (!element.events) element.events = {};
+
+  // recoger el hash de eventos para cada elemento
+  var handlers = element.events[type];
+  if (!handlers) {
+    handlers = element.events[type] = {};
+    // almacenar si hay los manejadores existentes
+    if (element["on" + type]) {
+      handlers[0] = element["on" + type];
+    }
+  }
+  // almancenar el nuevo manejador
+  handlers[handler.$$guid] = handler;
+
+  // asignar un manejador de eventos global para hacer todo el trabajo
+  element["on" + type] = handleEvent;
+}
+
+function removeEvent(element, type, handler) {
+  if (element.events && element.events[type]) {
+    delete element.events[type][handler.$$guid];
+  }
+}
+
+function handleEvent(event) {
+  // para la compatibilidad con IE
+  event = event || window.event;
+  // recuperar el hash de manejadores del evento
+  var handlers = this.events[event.type];
+  // Ejecutar cada uno de los manejadores
+  for (var i in handlers) {
+    this.$$handleEvent = handlers[i];
+    this.$$handleEvent(event);
+  }
+}
+
+// Añadir evento a un objeto vía ID
+function addEventById(elementId, type, handler) {
+    var myElement = document.getElementById(elementId);
+    if (myElement) {
+        addEvent(myElement, type, handler);
+        return 1;
+    }else{
+        return 0
+    }
+}
+
+// funcion que asocia eventos para desplegar capas y pintar botones en distintas zonas de la noticia. Es solo para una unica noticia.
+function initNoticia(_zonasOnClick, _zonasCount, _redesIds){
+    // Botones capas ocultas
+    wrapMostrarOcultarCapa('superior_capaEnviarCorreo');
+    wrapMostrarOcultarCapa('inferior_capaEnviarCorreo');
+
+
+    // Si se quieren otras zonas, hay que construir el array fuera y pasarlo como parametro.
+    var zonas_onclick   = (Array.isArray(_zonasOnClick) ) ? _zonasOnClick : new Array('superior','inferior','estas_leyendo');
+    var zonas_count     = (Array.isArray(_zonasCount) ) ? _zonasCount : new Array('superior','inferior');
+    var redes_ids       = (Array.isArray(_redesIds) ) ? _redesIds : new Array('twit','fb','gp','linkedin');
+    var countDivs       = new Array();
+    var aElements       = new Array();
+    var i = 0;
+    for (i in redes_ids) {
+        aElements.push(redes_ids[i]);
+        countDivs.push(redes_ids[i]);
+        aElements[redes_ids[i]] = new Array();
+        countDivs[redes_ids[i]] = new Array();
+        var j = 0;
+        var k = 0;
+        for (j in zonas_onclick) {
+            aElements[redes_ids[i]].push(zonas_onclick[j]+'_'+redes_ids[i]);
+        }
+        for (k in zonas_count) {
+            countDivs[redes_ids[i]].push(redes_ids[i]+'_num_'+zonas_count[k]);
+        }
+        switch (redes_ids[i]) {
+            case 'fb':
+                var fb   = new Facebook   (aElements['fb'], countDivs['fb']);
+                fb.run();
+                break;
+            case 'twit':
+                var twit = new Twitter    (aElements['twit'], countDivs['twit']);
+                twit.run();
+                break;
+            case 'linkedin':
+                var ln   = new LinkedIn   (aElements['linkedin'], countDivs['linkedin']);
+                ln.run();
+                break;
+            case 'gp':
+                var gp   = new GooglePlus (aElements['gp'], countDivs['gp']);
+                gp.run();
+                break;
+        }
+    }
+}
+
+//Función para verificar si existe una clase
+function existeClase(obj,cls){
+    return obj.className.match(new RegExp('(\\s|^)'+cls+'(\\s|$)'));
+}
+//Función para agregar una clase, si no existe la clase enviada - agrega la clase.
+function addClass(obj,cls){
+    if(!existeClase(obj,cls)) {
+        obj.className+=" "+cls;
+    }
+}
+//Función para Eliminar una clase
+function removeClass(obj,cls){
+    if(existeClase(obj,cls)) {
+        var exp =new RegExp('(\\s|^)'+cls+'(\\s|$)');
+        obj.className=obj.className.replace(exp,"");
+    }
+}
+
+// Para que funcione correctamente,
+//      Boton de Mostrar tiene que ser 'boton_'+nombreCapa a mostrar
+//      Boton de Cerrar tiene que ser 'cerrar_'+nombreCapa a cerrar
+//
+//      Además el efecto se consigue poniendo y quitando a la capa el class 'capa'
+function wrapMostrarOcultarCapa(nombreCapa){
+    var nombre_capa = document.getElementById(nombreCapa);
+    // Si no existe el id de la capa, no hacemos na de na.
+    if (typeof nombre_capa == "undefined") return true;
+    addEventById('cerrar_'  + nombreCapa,'click',function(){ removeClass( nombre_capa,'capa_desplegada');});
+    addEventById('boton_'   + nombreCapa,'click',function(){ addClass(    nombre_capa,'capa_desplegada');});
+}
+
+$(document).ready(function(){
+    initNoticia();
+});

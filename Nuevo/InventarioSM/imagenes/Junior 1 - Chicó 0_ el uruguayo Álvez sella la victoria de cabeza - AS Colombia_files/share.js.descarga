@@ -1,0 +1,54 @@
+var btnShare = {
+    init:function(){
+        $(".btn-wrapper .btn-share").on("click", "", function(e) {
+            e.preventDefault();
+            btnShare.wrapperVisible($(this).parents('.pntc').find('.rrss-wrapper'));
+        });
+    },
+    reinit:function(){
+        $(".btn-wrapper .btn-share").unbind( "click" );
+        $(".btn-wrapper").on("click", ".btn-share", function(e) {
+            e.preventDefault();
+            btnShare.wrapperVisible($(this).parents('.pntc').find('.rrss-wrapper'));
+        });
+    },
+    initCerrar:function(){
+        $(".rrss-wrapper").on("click", ".btn-cerrar", function(e) {
+            e.preventDefault();
+            btnShare.wrapperHidden($(this).parents('.rrss-wrapper'));
+        });
+    },
+    wrapperVisible:function(wrapper){
+        $(wrapper).html(btnShare.getGrapperCode($(wrapper).data('url'), $(wrapper).data('titulo')));
+        $(wrapper).parents('.pntc').find('.rrss-wrapper').css('visibility','visible');
+        $(wrapper).parents('.pntc').find('.rrss-wrapper').css('opacity',1);
+
+        btnShare.initCerrar();
+    },
+    wrapperHidden:function(wrapper){
+        $(wrapper).parents('.pntc').find('.rrss-wrapper').css('opacity',0);
+        $(wrapper).parents('.pntc').find('.rrss-wrapper').css('visibility','hidden');
+        $(wrapper).html('');
+    },
+    getGrapperCode:function(__enlace_de_la_noticia, __titulo_portadilla){
+        var code = '<a class="btn-hitzone" href="javascript:void(0);"></a>' +
+                    '<ul class="rrss-list">' +
+                    '<li>' +
+                    '<a href="javascript:void(0);" onclick="_botonClickResponsive(\'http://www.facebook.com/sharer.php?u=' + encodeURI(__enlace_de_la_noticia) + '&t=' + encodeURI(__titulo_portadilla).replace("'", "%27") + '\',\'Compartir\'); DTM.trackEvent(DTM.events.SHARE, {shareRRSS: \'RS_facebook\'});" class="facebook"><span class="as-icon-facebook"></span></a>' +
+                    '</li>' +
+                    '<li>' +
+                    '<a href="javascript:void(0);" onclick="_botonClickResponsive(\'http://twitter.com/share?url=' + encodeURI(__enlace_de_la_noticia) + '&text=' + encodeURI(__titulo_portadilla).replace("'", "%27") + (__g_twitter_via!=='' ? '&via=' + __g_twitter_via : '') + '\',\'Twitter\'); DTM.trackEvent(DTM.events.SHARE, {shareRRSS: \'RS_twitter\'});" class="twitter"><span class="as-icon-twitter"></span></a>' +
+                    '</li>' +
+                    '<li>' +
+                    '<a href="javascript:void(0);" onclick="_botonClickResponsive(\'https://plus.google.com/share?url=' + encodeURI(__enlace_de_la_noticia) + '\',\'Google +\'); DTM.trackEvent(DTM.events.SHARE, {shareRRSS: \'RS_google_plus\'});" class="google-plus"><span class="as-icon-google-plus"></span></a>' +
+                    '</li>' +
+                    '</ul>' +
+                    '<a class="btn-cerrar" href="javascript:void(0);"></a>';
+        return code;
+
+    }
+};
+
+$(document).ready(function(){
+    btnShare.init();
+});

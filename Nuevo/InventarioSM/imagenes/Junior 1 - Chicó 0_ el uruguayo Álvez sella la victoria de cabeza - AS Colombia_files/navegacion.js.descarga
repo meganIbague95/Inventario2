@@ -1,0 +1,468 @@
+//* Este codigo generado sirve para la implementacion de la logica tanto de las sabanas como de  las navegaciones*/
+
+function organize_under_750(){
+    if($(window).width() <= 750 && !$(".wrapper-sabana").hasClass("lt750")){
+        $(".wrapper-sabana").addClass("lt750");
+        $(".enlaces-sab .tit-sec").each(function(){
+            if (typeof($(this).attr("data-anchortext"))=='undefined'){
+                var anchorTextSection = "Noticias";
+            }else{
+                var anchorTextSection = $(this).attr("data-anchortext");
+            }
+            if(typeof($(this).children().attr("href"))!='undefined'){
+                $(this).next().prepend("<li class='lt750only'><a href='"+$(this).children().attr("href")+"'>"+anchorTextSection+"</a></li>");
+            }
+            if(!$(this).hasClass('no-desp')){
+                $(this).click(function(e){
+                    e.preventDefault();
+                    $(this).toggleClass("active");
+                    $(this).next().slideToggle();
+                });
+            }
+        });
+        $(".enlaces-sab .tit-sec:not(.no-desp) a").click(function(e){
+            e.preventDefault();
+            $(this).toggleClass("active");
+            $(this).next().slideToggle();
+        });
+        $("#menu-temasdia").next().append("<li class='lnk-mas lt750only'><a href='/tag/listado/'>Más temas</a></li>");
+        $("#menu-temasdia").click(function(e){
+            e.preventDefault();
+            $(this).toggleClass("active");
+            $(this).next().slideToggle();
+        });
+    }
+}
+
+//Gestiona el comportamiento de las navegaciones y las sabanas en funcion de la resolucion
+function organize(new_nav, new_section,new_section_mas){
+  
+    class_nav = (new_nav) ? new_nav : '.nav-seccion';
+    new_section = (new_section) ? new_section : '.nav-seccion-menu';
+    new_section_mas = (new_section_mas) ? new_section_mas : '.nav-seccion-mas';
+
+    if(window.innerWidth <= 750){
+        //organize_under_750();
+        if(window.innerWidth <= 480 && class_nav!='.nav-bloque-resultados'){
+            reset_menu(class_nav,new_section,new_section_mas);
+        }else{
+            reset_menu(class_nav,new_section,new_section_mas);
+            $(class_nav).show();
+            $(new_section).show();
+            organize_menu(class_nav, false,new_section,new_section_mas,0);
+        }
+        $("#menu-temasdia").addClass("responsive");
+        $("#menu-temasdia").next().hide();
+        funcionesNavegaciones.temasDia();
+    }else{
+        reset_menu(class_nav,new_section,new_section_mas);
+        organize_menu(class_nav, false,new_section,new_section_mas,0);
+        /*$(".wrapper-sabana").removeClass("lt750");
+        $(".lt750only").remove();*/
+        $(".enlaces-sab .tit-sec a").removeClass("active");
+        $(".enlaces-sab .tit-sec a").next().removeAttr("style");
+        $(".enlaces-sab .tit-sec a").off("click");
+        $("#menu-temasdia").removeClass("active");
+        $("#menu-temasdia").removeClass("responsive");
+        $("#menu-temasdia").next().removeAttr("style");
+        $("#menu-temasdia").next().show();
+        $("#menu-temasdia").off("click");
+    }
+}
+
+function organize_menu(st, organize_once,new_section,new_section_mas,depth){
+    $(".nav-seccion-menu").removeClass("cargandoMenu");
+    $(".nav-seccion").removeClass("s-ov");
+    
+    //if(depth > 10){return;}
+    depth++;
+
+    var s = 0;
+    $(st+" "+new_section+" > li").each(function(){
+        s += parseInt($(this).outerWidth());
+    });
+
+    if(window.innerWidth <= 768 && st!='.nav-seccion-menu'){
+        var widthUl = $(st+" "+new_section).width()+parseInt($(st+" "+new_section).parent().css('padding-right').replace('px',''))+parseInt($(st+" "+new_section).parent().css('padding-left').replace('px',''));
+    } else {
+        var widthUl = $(st+" "+new_section).width();
+    }
+
+    if(widthUl <= 0){return;}
+    
+    if((parseInt($(st+" .btn-desp-mas").outerWidth()) + s) > (widthUl - $(st+" .tit-seccion-nav:visible").outerWidth() - $("span.btn-desp-mas").outerWidth())){
+            $(st+" "+new_section+" > li").last().prependTo($(st+" "+new_section_mas));
+        if(!organize_once){
+            organize_menu(st, false,new_section,new_section_mas,depth);
+            return;
+        }
+    }else{
+        if($(st+ " "+new_section_mas+" > li").size() > 0 && !organize_once){
+            //$(st+" "+new_section_mas+" > li").first().appendTo($(st+" "+new_section));
+            //$(st+" "+new_section+" > li").last().prependTo($(st+" "+new_section_mas));
+            organize_menu(st, true,new_section,new_section_mas,depth);
+            return;
+        }
+    }
+    if($(st+ " "+new_section_mas+" > li").size() > 0){
+        $(st+" .btn-desp-mas").show();
+    }else{
+        $(st+" .btn-desp-mas").hide();
+    }
+}
+
+function reset_menu(st,new_section,new_section_mas){
+    if($(st+" "+new_section_mas+" > li").size() > 0){
+        $(st+" "+new_section_mas+" > li").each(function(){ $(this).appendTo($(st+" "+new_section)); });
+    }
+    if(window.innerWidth <= 480 && st!='.nav-bloque-resultados'){
+        $(st+" .btn-desp-mas").hide();
+      }
+}
+
+function onScrollWin(){
+    if($(window).scrollTop() > 0){
+        $('.vertical-header').addClass ('ontop');
+        $('body').addClass ('ontop');
+        $('.menu-principal').addClass ('ontop');
+    }else{
+        $('.vertical-header').removeClass ('ontop');
+        $('body').removeClass ('ontop');
+        $('.menu-principal').removeClass ('ontop');
+    }
+    $('.scrollfix').each(function(){
+        if(window.innerWidth > 991){
+            scrollFixToParent($(this), $(window).scrollTop());
+        }
+    });
+}
+
+function scrollFixToParent(e,scrollPosition){
+    if($(e).next().length == 0){
+        var parentTop = $(e).parent().position().top - parseInt($('body>header .menu-principal').outerHeight(true)) - 10;
+        var parentBottom = $(e).parent().position().top + $(e).parent().height() - $(e).height() - parseInt($('body>header .menu-principal').outerHeight(true)) - 10;
+        if(parentBottom > parentTop){
+            var parentWidth = $(e).parent().width();
+            var before = true;
+            $(e).siblings().each(function(){
+                if(!$(this).hasClass('scrollfix')){
+                    parentTop += parseInt($(this).outerHeight(true));
+                }
+            });
+            //console.log('parentTop: ' + parentTop + ' - parentBottom: ' + parentBottom + ' - scroll: '+ scrollPosition);
+            if(scrollPosition > parentTop && scrollPosition < parentBottom){
+                $(e).css({
+                    'position':'fixed',
+                    'top':'48px',
+                    'bottom':'auto',
+                    'z-index':'auto',
+                    'width': parentWidth + 'px',
+                });
+            }else if(scrollPosition > parentBottom){
+                $(e).css({
+                    'position':'absolute',
+                    'top':'auto',
+                    'bottom':'0px',
+                    'z-index':'auto',
+                    'width': parentWidth + 'px',
+                })
+            }else{
+                $(e).css({
+                    'position':'static',
+                    'top':'auto',
+                    'bottom':'auto',
+                    'z-index':'auto',
+                    'width': parentWidth + 'px',
+                })
+            }
+        }else{
+            //console.log('parentBottom ('+parentBottom+')> parentTop ('+parentTop+')');
+        }
+    }
+}
+
+var funcionesSabanas = {
+    init: function() {
+        $('.cont-enlaces-sab div[class^="sabana-"] .enlaces-sab .tit-sec').on("click", "", function(e) {
+            if(window.innerWidth <= 768){
+                if ($(this).parent().children("ul").children("li").length > 0) {
+                    e.preventDefault();
+                    $(this).parent().children("ul").slideToggle( "slow" );
+                }
+            }
+        });
+
+        $('.nav-secciones > ul > li.menu > a').on("click", "", function(e) {
+            funcionesSabanas.cargaSabana(e, this);
+        });
+        funcionesSabanas.cargaSabanaInicial();
+    },
+    reinit: function(nameSabanaDiv) {
+        $(".cont-enlaces-sab ." + nameSabanaDiv + " .enlaces-sab .tit-sec").click(function(e){
+            if(window.innerWidth <= 768){
+                if ($(this).parent().children("ul").children("li").length > 0) {
+                    e.preventDefault();
+                    $(this).parent().children("ul").slideToggle( "slow" );
+                }
+            }
+        });
+    },
+    cargaSabanaInicial: function() {
+        var id;
+        var continuar = true;
+        if($(".nav-sab .nav-secciones ul > .menu.active").length == 0){
+            $(".nav-sab .nav-secciones ul > .menu").each(function(key, contenido) {
+                id = $(contenido).attr('id');
+                idTmp = id.replace("menu-","sabana_");
+                $.each(sabanas, function(keySabanas, value) {
+                    if ( idTmp.trim() == keySabanas.trim() && continuar){
+                        $( '#' + id + ' > a' ).trigger( "click" );
+                        continuar = false;
+                        return false;
+                    }
+                });
+                if (!continuar){
+                    return false;
+                }
+            });
+            if (!continuar){
+                return true;
+            }
+        }
+        return false;
+    },
+    cargaSabana: function(e, linkSabana) {
+        // Los elementos que no tienen class "menu" no muestran sábana, van a su enlace
+        if($(linkSabana).parent().hasClass("menu")){
+            if(!$(linkSabana).parent().hasClass("active")){
+                if ((typeof e !== 'undefined') && e){
+                    e.preventDefault();
+                }
+                var name_sabana_javascript  = $(linkSabana).parent().attr("id").replace("menu-","sabana_");
+                var name_sabana_div  = $(linkSabana).parent().attr("id").replace("menu-","sabana-");
+                //var actualidad = $(linkSabana).parent().hasClass('sin-actualidad');
+                var actualidad = $(linkSabana).hasClass('sin-actualidad');
+                if($('.'+name_sabana_div).length == 0){
+                    $(".cont-enlaces-sab").append(sabanas[name_sabana_javascript]);
+
+                    //En version movil hay que añadirle los eventos toogle para que se muestren los elementos de tercer nivel
+                    /* añadir toggle a tercer nivel */
+                    funcionesSabanas.reinit(name_sabana_div);
+                    if (!actualidad) {
+                        funcionesSabanas.generaLinkActualidad(name_sabana_div);
+                    }
+                    funcionesSabanas.compruebaNoDesp(name_sabana_div);
+                    /* Fin añadir toggle a tercer nivel */
+                } else if (!$(".cont-enlaces-sab ." + name_sabana_div).hasClass("link-actualizado")){
+                    if (!actualidad) {
+                        funcionesSabanas.generaLinkActualidad(name_sabana_div);
+                    }
+                    funcionesSabanas.compruebaNoDesp(name_sabana_div);
+                }
+                $(".nav-secciones > ul > li").removeClass("active");
+                $(linkSabana).parent().addClass("active");
+                $(".cont-enlaces-sab > div").hide();
+                $("."+$(linkSabana).parent().attr("id").replace("menu","sabana")).show();
+            }
+        }
+    },
+    compruebaNoDesp: function(nameSabanaDiv) {
+        $(".cont-enlaces-sab ." + nameSabanaDiv + " .enlaces-sab .tit-sec").each(function(key, contenido) {
+            if ($(contenido).parent().children("ul").children("li").length == 0) {
+                $(contenido).addClass('no-desp');
+            }
+        });
+    },
+    generaLinkActualidad: function(nameSabanaDiv) {
+        // Los elementos que no tienen class "menu" no muestran sábana, van a su enlace
+        var title;
+        var href;
+        $(".cont-enlaces-sab ." + nameSabanaDiv).addClass("link-actualizado");
+        $(".cont-enlaces-sab ." + nameSabanaDiv + " .enlaces-sab .tit-sec").each(function(key, contenido) {
+            if ($(contenido).parent().children("ul").children("li").length > 0
+                && $(contenido).parent().children("ul").children("li").first().children("a").html() != 'Actualidad'
+                && $(contenido).parent().children("ul").children("li").first().children("a").html() != 'Noticias') {
+                title = $(contenido).children("a").attr('title');
+                href = $(contenido).children("a").attr('href');
+
+                //TODO: Es necesario modificar la palabra actualidad por una variable multiidioma.
+                $(contenido).parent().children("ul").prepend('<li class="hidden-sm hidden-md"><a href="' + href + '" title="' + title + '">Actualidad</a><li>');
+            }
+        });
+    }
+};
+
+var funcionesNavegaciones = {
+    init: function() {
+        if ($('.nav-bloque-resultados').length > 0) {
+            organize('.nav-bloque-resultados','.link-tabs','.link-tabs-mas');
+            $(window).resize(function(){organize('.nav-bloque-resultados','.link-tabs','.link-tabs-mas'); });
+        }
+        if ($('.nav-seccion .nav-seccion-menu').length > 0){
+            organize();
+        }
+        
+        if(window.innerWidth <= 750){
+            $("#menu-temasdia").addClass("responsive");
+        }
+        funcionesNavegaciones.temasDia();
+    },
+    temasDia: function() {
+        $("#menu-temasdia").unbind( "click" );
+        $("#menu-temasdia.responsive").click(function(e){
+            e.preventDefault();
+            $(this).toggleClass("active");
+            $(this).next().slideToggle();
+        });
+    }
+};
+
+///// Nuevas funciones para organizar las ediciones de Diarioas (chile, colombia, Argentina, Mexico...)
+function organize_ediciones(st, organize_once,new_section,new_section_mas,depth){
+    if(depth > 10){return;}
+    depth++;
+    var s = 0;
+    $(st+" "+new_section+" > li ").each(function(index){
+        s += parseInt($(this).outerWidth(true));  //true
+    });
+
+    //if(window.innerWidth < 768 && st!='.nav-seccion-menu'){
+    //    var widthUl = $(st+" "+new_section).width()+parseInt($(st+" "+new_section).parent().css('padding-right').replace('px',''))+parseInt($(st+" "+new_section).parent().css('padding-left').replace('px',''));
+    //} else {
+       //    $(".bt-ediciones-mas").hide();//
+        var widthUl = $(st+" "+new_section).width(); //$(st).width();  
+   // }
+
+    if(widthUl <= 0){return;}
+
+    var _ventana_ancho =  window.innerWidth;
+    var _utiles_header = $(".utiles-header").outerWidth(true);
+    var _portales_verticales = $(".portales-verticales").outerWidth();
+    var _lateral_mayor =  ( _utiles_header > _portales_verticales ) ? _utiles_header : _portales_verticales ;
+
+    var bt_mas = $(".bt-ediciones-mas");
+
+    if(window.innerWidth>991){
+        var _espacio_dipononible =  _ventana_ancho - ( (2 * _lateral_mayor ) + bt_mas.outerWidth(true) );
+    }else{
+        var _espacio_dipononible =  _ventana_ancho - (  _utiles_header  + bt_mas.outerWidth(true) ); //+ parseInt($(st+" "+new_section).parent().css('margin-left').replace('px',''))  );
+    }
+
+    if( $(st+" "+new_section).width() > _espacio_dipononible  ){  
+            $(st+" "+new_section+" > li").last().prependTo($(st+" "+new_section_mas));
+        if(!organize_once){
+            organize_ediciones(st, false,new_section,new_section_mas,depth);
+            return;
+        }
+    }else{
+        if($(st+ " "+new_section_mas+" > li").length > 0 && !organize_once){
+            $(st+" "+new_section_mas+" > li").first().appendTo($(st+" "+new_section));
+            organize_ediciones(st, true,new_section,new_section_mas,depth);
+            return;
+        }
+    }
+
+    if($(st+ " "+new_section_mas+" > li").length > 0){
+        bt_mas.css({"display":"inline-block"})
+    }else{
+        bt_mas.hide().removeClass("active");
+        $(st+" "+new_section_mas).removeClass("active");
+    }
+}
+
+
+var funcionesOrganizaEdiciones = {
+    init: function() {
+
+        if ($('.enlaces-ediciones').length > 0){
+            if(window.innerWidth >= 750){    
+                organize_ediciones('.box-enlaces-ediciones', false, '.enlaces-ediciones','.enlaces-ediciones-mas',0);
+            }
+        }
+
+        $(window).resize(function(){ 
+            organize_ediciones('.box-enlaces-ediciones', false, '.enlaces-ediciones','.enlaces-ediciones-mas',0);
+        });
+
+    }
+
+};
+
+
+
+$(document).ready(function(){
+        
+    var sections = [".nav-seccion-mas",".link-tabs-mas"];
+
+    $(".nav-seccion").find('a.btn-desp').click(function(e){
+        e.preventDefault();
+        $(this).parent().siblings().children('a.btn-desp').removeClass('active').next().hide();
+        $(this).toggleClass('active').next().toggle();
+      });
+
+    $(".nav-aux").find('a.btn-desp').click(function(e){
+        e.preventDefault();
+        $(this).parent().siblings().children('a.btn-desp').removeClass('active').next().hide();
+        $(this).toggleClass('active').next().toggle();
+      });
+
+    $('.btn-menu').click(function(e){
+        e.preventDefault();
+        $(this).toggleClass("open");
+        $(".wrapper-sabana").scrollTop(0);
+        $(".wrapper-sabana").toggleClass("hide");
+        if($('.btn-menu').hasClass("open")){          
+            var total_ancho =0;
+            $(".temas-dia li").each(function(){
+                total_ancho += $(this).outerWidth(true);
+            });
+            if($(".temas-dia").width() < ($("#menu-temasdia").outerWidth(true) + total_ancho)){
+                $(".temas-dia").removeClass("abierto");
+            }else{
+                $(".temas-dia").addClass("abierto");
+            }
+        }
+    })
+
+    // Eventos asociados a las sabanas
+    $(".abrir-buscador").click(function(e){ e.preventDefault(); $(".capa-buscador-menu").toggleClass("hide"); });
+    $(".cerrar-buscador").click(function(e){ e.preventDefault(); $(".capa-buscador-menu").toggleClass("hide"); });
+    $(".sel-edicion").click(function(e){ e.preventDefault(); $(".todas-ediciones").toggleClass("hide"); $(".cerrar-ediciones").toggleClass("hide"); });
+    $(".cerrar-ediciones").click(function(e){ e.preventDefault(); $(".todas-ediciones").toggleClass("hide"); $(".cerrar-ediciones").toggleClass("hide"); });
+    $(".abrir-usuario").click(function(e){ e.preventDefault(); $(".capa-usuario").toggleClass("hide"); });
+    $(".cerrar-usuario").click(function(e){ e.preventDefault(); $(".capa-usuario").toggleClass("hide"); });
+
+    // Eventos asociados a las navegaciones
+    $(".btn-desp-menu").click(function(){ $(this).parent().find(".nav-seccion-menu").toggle(); $(this).toggleClass("active"); });
+    $(".btn-desp-mas").click(function(){var self = this; $.each(sections,function(index, val) {$(self).parent().find(val).toggleClass("active"); }); $(this).toggleClass("active"); })
+
+    if($(".header-seccion").length == 0){
+        $(".tit-seccion-nav").show();
+     }
+     // Subnavegación directos/asdatos
+     $(".mas-aux").click(function(){
+         $(this).toggleClass("active");
+          $(".desp-mas-aux").toggle();
+    });
+
+    onScrollWin();
+    $(window).scroll(onScrollWin);
+
+    funcionesSabanas.init();
+    funcionesNavegaciones.init();
+
+    $(".mas-temas").click(function(){
+        $(".temas-dia").toggleClass("abierto");
+    });
+
+    $(".btn-desp-mas").click(function(){
+        $(".enlaces-ediciones-mas").toggleClass("active");
+        $(this).toggleClass("active"); 
+    })
+    funcionesOrganizaEdiciones.init();
+    
+});
+
+$(window).resize(function(){ 
+    organize();
+});

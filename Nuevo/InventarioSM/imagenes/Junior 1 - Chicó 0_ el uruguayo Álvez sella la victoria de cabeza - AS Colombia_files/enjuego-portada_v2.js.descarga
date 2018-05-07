@@ -1,0 +1,1486 @@
+  // 1. Basic object for our stuff                               
+    window.slider = {};                                           
+    // 2. Settings
+    slider.waypoints = [];  
+    slider.sensitivity = 70 ;  //25// horizontal % needed to trigger swipe
+
+    // 2. Placeholder to remember which slide weâ€™re on
+    slider.activeSlide = 0;                                            
+    // 3. Slide counter
+    slider.slideCount = 0;                                            
+
+    slider.desplazaX = 0;
+
+    slider.sliderEl = false        //   ayuda a agenda_hammer.js para ver si esta funcionando  eventos tactil
+
+    // 4. Initialization + event listener
+    slider.init = function( selector ) {
+    
+      // 4a. Find the container
+      slider.sliderEl = document.querySelector( selector );
+      
+      // 4b. Count stuff
+      slider.slideCount =  0;            
+
+      // 4d. Set up HammerJS
+      slider.sliderManager = new Hammer.Manager( slider.sliderEl );
+      slider.sliderManager.add( new Hammer.Pan({ threshold: 0, pointers: 0 }) );
+
+      //var resultado;
+      resultado = 0;
+      slider.sliderManager.on( 'pan', function( e ) { 
+        resultado =  slider.desplazaX + e.deltaX ;
+        slider.sliderEl.style.transform = 'translateX( ' +  resultado  + 'px )';  
+
+        // 4h. Snap to slide when done
+        if( e.isFinal ) {
+
+          var nPasos = Math.round(e.velocityX / 1.2 ) ; 
+           if (nPasos!=0){
+            slider.goTo( slider.activeSlide - nPasos );
+           } else {
+            if( e.deltaX <= -50 ){
+                slider.goTo( slider.activeSlide + 1 );
+              }else if( e.deltaX >= 50 ){
+                slider.goTo( slider.activeSlide - 1 );
+              }else {
+                slider.goTo( slider.activeSlide );   
+              }          
+           }
+
+        }
+      });
+    };
+
+    // 5. Update current slide
+    slider.goTo = function( number ) {
+      
+      // 5a. Stop it from doing weird things like moving to slides that donâ€™t exist  // Detenerlo de hacer cosas extraÃ±as como pasar a diapositivas que no existen
+      if( number < 0 )
+        slider.activeSlide = 0;
+      else if( number > slider.slideCount - 1 )
+        slider.activeSlide = slider.slideCount - 1;
+      else
+        slider.activeSlide = number;
+        
+     // 5b. Apply transformation & smoothly animate via .is-animating CSS  // Aplicar transformaciÃ³n y animar suavemente a travÃ©s de .is-animating CSS
+     slider.sliderEl.classList.add( 'is-animating' );
+
+      var percentage = - ( slider.waypoints[slider.activeSlide] ) ; 
+
+      slider.desplazaX = percentage;
+
+      slider.sliderEl.style.transform = 'translateX( ' + percentage + 'px )';
+     
+     clearTimeout( slider.timer );
+     slider.timer = setTimeout( function() {
+       slider.sliderEl.classList.remove( 'is-animating' );
+     }, 400 );
+      
+    };
+
+  $(document).ready(function(){
+
+    var agenda_sup = new agenda();
+    agenda_sup.init({'ag_target':'#enjuego_body'});
+
+    if( $(window).width()>= 768){
+      slider.init( '.csel-content' ); 
+    }
+
+    agenda_sup.setSlider(slider);
+
+     //if( $(window).width()>= 768){
+        //$('body').css("padding-top", 0);
+     //}
+
+    
+   /* if( $(window).width()>= 768){   
+        agenda_sup.setSlider(slider);
+    }*/
+    
+  });
+
+  /* $( window ).load(function() {
+    //agenda_sup.init({'ag_target':'#enjuego_sup'});
+    if( $(window).width()>= 768){   
+    agenda_sup.setSlider(slider);
+     }
+  });*/
+  
+  agenda = function () {
+
+    var ag = this;
+    var ag_target = '';
+
+    var csel;
+    var csel_content;
+    var csel_items;
+    var csel_items_widths = [];
+
+    var width_max; 
+    var width_available;
+
+    var height_max;
+    var height_available;
+     
+    var pos =  0;
+    var old_index = 0;
+    var waypoints = [];
+
+    // Variables para la navegacion entre flechas y desplegable
+    var waypoints_desplegable = []; //Puntos de corte del desplegable (competiciones)
+    var waypoints_flechas = []; //Puntos de corte de las flechas (dependerá del tamaño de la pantalla)
+    var modo_navegacion; //Flechas o desplegable
+    var modo_navegacion_anterior; //Lo guardamos para comprobar cuando cambiamos de modo
+    var waypoints_anterior = []; /* Guardamos los puntos de corte del modo anterior para comprobar si se va a navegar 
+                                 de modo incorrecto y corregirlo */
+    //
+
+    var id_waypoints = [];
+
+    var viewport_res;
+    var arrow_padding = 24; //60
+    var folded = true;
+    var posScroll; 
+
+    var handle = null;
+    var terminado = false;
+
+    var competiciones_json = [];
+
+    var intervalTime = 10000; //hay que configurarlo
+
+    var desdeDesplegable = 0;
+
+    var posSeleccionada = 0;
+
+    var dir = 0;
+
+
+    if (typeof(protocolUrl) == "undefined" )
+      var protocolUrl = document.location.protocol;
+    
+    /* Método inicial: define los elementos para el csel, el contenido y los ítems. Luego calcula el ancho según los datos,
+    así como las anclas y añade los eventos */
+    ag.init = function ( config ) {
+
+      if(config.ag_target !== undefined) ag_target = config.ag_target;
+
+      //...
+
+      csel =            $(ag_target + ' .csel-agenda');
+      csel_content =    $(ag_target + ' .csel-content');
+      csel_items =      $(ag_target + ' .csel-agenda .csel-item').length;
+      csel_wrap =       $(ag_target + ' .csel-wrap')
+      viewport_res =    $(window).width();
+
+      if  ($(window).width() >= 768) {  
+          ag.calculateWidth ();
+          ag.calculateWaypoints();           
+      }           
+
+      //...
+      ag.events(); //Añade los eventos
+      ag.refrescaEnJuego();
+
+      $('.buscador').find('#desplegableCompeticion a:first').text($($('ul.desplegable:first >li:first a').get(0)).text());
+
+    }
+
+
+    ag.refrescaEnJuego = function () {
+
+      //Si estamos en el editor, paramos el intervalo 
+      if (window.location.hostname.split('.')[0] == 'editor') {
+        clearInterval(handle);
+        return false;
+      }
+
+      //Si se ha terminado, paramos el intervalo, y reseteamos handle e intervalTime
+      if (terminado) {
+          clearInterval(handle);
+          handle = null;
+          intervalTime = 3000000;
+      }
+
+
+      var url = protocolUrl + '//as02.epimg.net/portada/js/bloqueendirecto/portada_paralelo.js2?time=' + new Date().getTime(),
+      json;
+      
+      if (window.location.hostname.split('.')[0] != 'as') {
+        url = url.replace('portada_paralelo.js2', window.location.hostname.split('.')[0] + '_paralelo.js2');
+        }
+
+      /******************************************************************************************************/
+
+      //Solicitamos los datos
+      $.ajax(url, {
+        dataType: 'jsonp',
+        jsonpCallback: 'callback_enjuego_bloque_portada'
+        }).success(function(response) {
+            json = response,
+                   toralWidth = 0,
+                   totalHeight = 0,
+                   scroll = 0,
+                   no_terminado_futbol = true,
+                   terminado_motor = false,
+                   terminado_ciclismo = false;
+
+            //Todas las agrupaciones csel-agrup futbol, baloncesto...
+            var competiciones = $('.csel-content').children();
+            //Botón del pánico, las competiciones pintadas en el HTML son distintas en longitud a las recibidas por el JSON
+            if (competiciones.length != json.length) {
+                //    location.reload(true);
+                console.log("!!!!!!!!!!!!!!!!!!!!!!!!1 PANIC!!");
+                console.log("------------- competiciones ", competiciones.length);
+                console.log("------------- json ", json.length);
+            }//if
+
+            //Se llama al método de repintado adecuado según competición
+            $.each(json, function(i, competicion) {
+                competiciones_json[i] = {
+                    ancho: 0,
+                    id: null,
+                    scroll: 0,
+                    alto: 0
+                }; //competiciones_json
+                competiciones_json[i].ancho = toralWidth;
+                competiciones_json[i].id = competicion.competicion_norm;
+                competiciones_json[i].scroll = scroll;
+                competiciones_json[i].alto = totalHeight;
+
+                toralWidth += $('#comp-' + competicion.competicion_norm).outerWidth(true) - 40;
+                //toralHeight += $('#comp-' + competicion.competicion_norm).outerHeight(true) - 40;
+
+                switch (competicion.deporte) {
+                    case 'futbol':
+                    case 'baloncesto':
+                        no_terminado_futbol = ag.pintarEnJuegoFutbolBaloncesto(competicion, competiciones[i]);
+                        break;
+                    case 'motor':
+                    {
+                      if(competicion.competicion_norm == "formula_1"){     
+                        terminado_motor = ag.pintarEnJuegoMotor_formula1(competicion, competiciones[i]);
+                      }else if(competicion.competicion_norm == "motociclismo") {
+                        terminado_motor = ag.pintarEnJuegoMotor_motociclismo(competicion, competiciones[i]);
+                      }
+                       break;
+                    }
+                    case 'ciclismo':
+                        terminado_ciclismo = ag.pintarEnJuegoCiclismo(competicion, competiciones[i]);
+                        break;
+                    case 'tenis':
+                        terminado_ciclismo = ag.pintarEnJuegoTenis(competicion, competiciones[i]);
+                        break;
+                }//switch
+
+                if (terminado_motor !== undefined && no_terminado_futbol !== undefined && terminado_ciclismo !== undefined) {
+                    terminado = terminado_motor && no_terminado_futbol && terminado_ciclismo;
+                   
+                }//if
+            }); //each json
+        }).fail(function(a, b, c) {
+            console.log("FIAL!!!!!!!!!!");
+        }); //Fail y Ajax
+
+        //Tras el repintado, seteamos el intervalo
+        if (!handle) {
+            handle = setInterval(ag.refrescaEnJuego, intervalTime); //Llama a la función setInterval cada intervalo de tiempo establecido
+        }
+        //Refrecamos las medidas del contenedor
+        if ($(window).width() >= 768) {
+         ag.calculateWidth();
+      }
+
+    }//refrescaEnjuego
+
+
+    /**
+     *@method pintarEnJuegoFutbolBaloncesto: Método para repintar competiciones
+     *@param Object enjuego: JSON con los valores a pitnar
+     *@param Object competiciones: Objeto DOM donse se va a repintar
+     **/
+     ag.pintarEnJuegoFutbolBaloncesto = function(enjuego, competiciones) {
+
+       var end = "FINALIZADO",
+            game_no_terminado = [];   
+
+        //Recorremos los partidos. Para cada uno, ejecutamos una función para procesarlos
+        $.each(enjuego.partidos, function(j, val) {
+            item = $(".csel-item[data-idpartido='"+val.id+"']");
+            
+            //Si el item existe y es visible
+            if (item.length){
+                //Eliminamos su clase de estado_partido y actualizamos los datos de su jugada
+                item.removeClass('finalizado directo previo');
+                item.find('.team1').find('.dato').html((val.local.penaltis == null) ? val.local.puntos : val.local.puntos + '<span class="gol-penal">' + val.local.penaltis + '</span>');
+                item.find('.team2').find('.dato').html((val.visitante.penaltis == null) ? val.visitante.puntos : val.visitante.puntos + '<span class="gol-penal">' + val.visitante.penaltis + '</span>');
+                
+                //Dependiendo del estado del partido, actualizamos la clase referente a su estado
+                switch (val.estado_partido) {
+                    case "enjuego":
+                        game_no_terminado.push('true'); //Añadimos que NO ha terminado el partido
+                        item.addClass('directo'); //Añadimos la clase directo
+                        item.find('.tiempo').text("EN JUEGO");
+                        /* Si existe el hover de opciones, repintamos el primer hijo */
+                        if(item.find('.item-mas'))
+                        {
+                          item.find('.mas-ops').children('li').first().empty();
+                          html_ops = "<a href=\"" +val.link+ "\">Ver</a>";
+                          item.find('.mas-ops').children('li').first().append(html_ops);
+                        }
+                        break;
+                    case "terminado":
+                        game_no_terminado.push('false'); //Añadimos que ha terminado
+                        item.addClass('finalizado'); //Añadimos clase finalizado
+                        if (window.location.hostname.split('.')[0] == 'en') {
+                            end = "COMPLETED";
+                        }
+                        item.find('.tiempo').text(end);
+
+                        if(item.find('.apostero'))
+                        {
+                            item.find('.apostero').remove();
+                        }
+
+                        /* Si existe el hover de opciones, repintamos el primer hijo */
+                        if(item.find('.item-mas'))
+                        {
+                          item.find('.mas-ops').children('li').first().empty();
+                          html_ops = "<a href=\"" +val.link+ "\">Crónica</a>";
+                          item.find('.mas-ops').children('li').first().append(html_ops);
+                        }                 
+                        break;
+                    case "siguiente":
+                        game_no_terminado.push('true');
+                        item.addClass('previo');
+                        item.find('.tiempo').text(val.hora);
+
+                        /* Si existe el hover de opciones, repintamos el primer hijo */
+                        if(item.find('.item-mas'))
+                        {
+                          item.find('.mas-ops').children('li').first().empty();
+                          html_ops = "<a href=\"" +val.link+ "\">Previa</a>";
+                          item.find('.mas-ops').children('li').first().append(html_ops);
+                        }
+                        break;
+                }
+            }
+        });
+       // return (game_no_terminado.indexOf('false') == -1) ? true : false;
+       return true;
+
+    }
+
+
+    /**
+     *@method pintarEnJuegoMotor: Método para repintar competiciones de motor
+     *@param Object enjuego: JSON con los valores a pitnar
+
+        competicion_norm: formula_1
+        deporte: motor
+        fase: GP España
+        id_dep: 6
+        link_clasificacion: ...
+        link_resultados: ...
+        nombre_competicion: Fórmula 1
+        partidos:
+          0 => apostero: ""
+               descripcion: GP España
+               estado_partido: enjuego
+               hora: 14:00
+               id: 197418
+               link: ...
+               minuto: 66/66 vueltas
+               pilotos:
+                0 => abr: VET
+                     equipo: mclaren
+                     img: ...
+                     link: ...
+                     nom: Holiii
+                     nom_norm: sebastian_vettel
+                     pos: 2
+                     tiempo: 3.500 seg
+                1 => ...
+                2 => ...
+                3 => ...
+                4 => ...
+
+     *@param Object competiciones: Objeto DOM donse se va a repintar
+     **/
+     ag.pintarEnJuegoMotor = function(enjuego, competiciones) {
+
+        var end = "TERMINADO",
+            ret_terminado = false;
+
+        //Competiciones = agrupaciones de motor       
+        //Teams
+        // 0 => Cajita del nombre de deporte (fórmula 1)
+        // 1 => Cajita del nombre de la competición
+        // 2 => Caja que contiene las cajitas de pilotos
+        teams = $(competiciones).find('.csel-item'); //Coge las cajas de agrupaciones de motor
+
+        //Refresco de datos de pilotos si estos existen en el JSON
+        if (typeof(enjuego.partidos[0].pilotos) != 'undefined' && enjuego.partidos[0].estado_partido != 'siguiente') 
+        {
+            //Borramos las cajitas de equipo que sean hijos directos de la competicion
+            $(teams).find('.equipo').remove();
+
+            /* Para cada piloto
+                pilotos:
+                  0 => abr: VET
+                       equipo: mclaren
+                       img: ...
+                       link: ...
+                       nom: Holiii
+                       nom_norm: sebastian_vettel
+                       pos: 2
+                       tiempo: 3.500 seg
+                  1 => ...
+                  2 => ...
+                  3 => ...
+                  4 => ...
+             */
+            $.each(enjuego.partidos[0].pilotos, function(j, val) 
+            {
+                //Reseteamos la posición del piloto
+                class_destacado = "";
+                if (val.pos <= 3) {
+                    class_destacado = " destacado";
+                }
+
+                if(val.pos > 1)
+                {
+                  tiempo= (val.tiempo!="")?'a '+val.tiempo:"";
+                }
+                else
+                {
+                  tiempo=(val.tiempo!="")?val.tiempo:"";
+                }
+
+               //Regeneramos el código de la cajita (nueva pos, nuevo nombre, nuevo tiempo y nueva imagen)                
+                html_cajita = "<div class=\"equipo\"><div class=\"equipo-info\"><span class=\"pos" + class_destacado + "\">" + val.pos + "</span><span class=\"tiempo\">" + tiempo + "</span></div><p class=\"piloto\">" + val.nom + "</p><p class=\"equipo-piloto tam-fijo\">"+ val.equipo.charAt(0).toUpperCase() + val.equipo.slice(1)+"</p><span class=\"f1-equipo-color " + val.equipo+ "\" ></div>";
+
+                //Le adjuntamos la cajita de piloto regenerada al contenedor de cajitas de pilotos
+                $(".csel-item[data-idpartido='"+enjuego.partidos[0].id+"']").append(html_cajita);
+            });
+        }
+
+        //Quitamos la clase a la cajita de la competición
+        $(teams[1]).removeClass('finalizado directo previo');
+        $(teams[2]).removeClass('finalizado directo previo');
+
+        //Dependiente del nuevo estado de la competición
+        switch (enjuego.partidos[0].estado_partido) {
+            case "enjuego":
+                ret_terminado = false;
+                $(teams[1]).addClass('directo');
+                $(teams[2]).addClass('directo');
+                $(teams[1]).find('.carrera-info').find('.tiempo').text(enjuego.partidos[0].minuto); //Actualizamos el tiempo
+
+                break;
+            case "terminado":
+                ret_terminado = true;
+                $(teams[1]).addClass('finalizado');
+                $(teams[2]).addClass('finalizado');
+
+                if (window.location.hostname.split('.')[1] == 'en') {
+                    end = "COMPLETED";
+                }
+                $(teams[1]).find('.carrera-info').find('.tiempo').text(end); //Actualizamos el texto
+
+                break;
+            case "siguiente":
+                ret_terminado = false;
+                $(teams[1]).addClass('previo');
+                $(teams[2]).addClass('previo');
+                $(teams[1]).find('.carrera-info').find('.tiempo').text(enjuego.partidos[0].hora); //Actualizamos el tiempo
+                
+                break;
+        }
+        return ret_terminado;
+    }
+
+    ag.pintarEnJuegoMotor_formula1 = function(enjuego, competiciones) {
+
+        var end = "TERMINADO",
+            ret_terminado = false;
+
+        //Competiciones = agrupaciones de motor       
+        //Teams
+        // 0 => Cajita del nombre de deporte (fórmula 1)
+        // 1 => Cajita del nombre de la competición
+        // 2 => Caja que contiene las cajitas de pilotos
+        teams = $(competiciones).find('.csel-item'); //Coge las cajas de agrupaciones de motor
+
+        //Refresco de datos de pilotos si estos existen en el JSON
+        if (typeof(enjuego.partidos[0].pilotos) != 'undefined' && enjuego.partidos[0].estado_partido != 'siguiente') 
+        {
+            //Borramos las cajitas de equipo que sean hijos directos de la competicion
+            $(teams).find('.equipo').remove();
+
+            /* Para cada piloto
+                pilotos:
+                  0 => abr: VET
+                       equipo: mclaren
+                       img: ...
+                       link: ...
+                       nom: Holiii
+                       nom_norm: sebastian_vettel
+                       pos: 2
+                       tiempo: 3.500 seg
+                  1 => ...
+                  2 => ...
+                  3 => ...
+                  4 => ...
+             */
+            $.each(enjuego.partidos[0].pilotos, function(j, val) 
+            {
+                //Reseteamos la posición del piloto
+                class_destacado = "";
+                if (val.pos <= 3) {
+                    class_destacado = " destacado";
+                }
+
+                if(val.pos > 1)
+                {
+                  tiempo= (val.tiempo!="")?'a '+val.tiempo:"";
+                }
+                else
+                {
+                  tiempo=(val.tiempo!="")?val.tiempo:"";
+                }
+
+               //Regeneramos el código de la cajita (nueva pos, nuevo nombre, nuevo tiempo y nueva imagen)                
+                html_cajita = "<div class=\"equipo\"><div class=\"equipo-info\"><span class=\"pos" + class_destacado + "\">" + val.pos + "</span><span class=\"tiempo\">" + tiempo + "</span></div><p class=\"piloto\">" + val.nom + "</p><p class=\"equipo-piloto tam-fijo\">"+ val.equipo.charAt(0).toUpperCase() + val.equipo.slice(1)+"</p><span class=\"f1-equipo-color " + val.equipo+ "\" ></div>";
+
+                //Le adjuntamos la cajita de piloto regenerada al contenedor de cajitas de pilotos
+                $(".csel-item[data-idpartido='"+enjuego.partidos[0].id+"']").append(html_cajita);
+            });
+        }
+
+        //Quitamos la clase a la cajita de la competición
+        $(teams[1]).removeClass('finalizado directo previo');
+        $(teams[2]).removeClass('finalizado directo previo');
+
+        //Dependiente del nuevo estado de la competición
+        switch (enjuego.partidos[0].estado_partido) {
+            case "enjuego":
+                ret_terminado = false;
+                $(teams[1]).addClass('directo');
+                $(teams[2]).addClass('directo');
+                $(teams[1]).find('.carrera-info').find('.tiempo').text(enjuego.partidos[0].minuto); //Actualizamos el tiempo
+
+                break;
+            case "terminado":
+                ret_terminado = true;
+                $(teams[1]).addClass('finalizado');
+                $(teams[2]).addClass('finalizado');
+
+                if (window.location.hostname.split('.')[1] == 'en') {
+                    end = "COMPLETED";
+                }
+                $(teams[1]).find('.carrera-info').find('.tiempo').text(end); //Actualizamos el texto
+
+                break;
+            case "siguiente":
+                ret_terminado = false;
+                $(teams[1]).addClass('previo');
+                $(teams[2]).addClass('previo');
+                $(teams[1]).find('.carrera-info').find('.tiempo').text(enjuego.partidos[0].hora); //Actualizamos el tiempo
+                
+                break;
+        }
+        return ret_terminado;
+    }
+
+    ag.pintarEnJuegoMotor_motociclismo = function(enjuego, competiciones) {
+
+        var end = "TERMINADO",
+            ret_terminado = false;
+
+        //Competiciones = agrupaciones de motor       
+        //Teams
+        // 0 => Cajita del nombre de deporte (fórmula 1)
+        // 1 => Cajita del nombre de la competición
+        // 2 => Caja que contiene las cajitas de pilotos
+        teams = $(competiciones).find('.csel-item'); //Coge las cajas de agrupaciones de motor
+
+        //Refresco de datos de pilotos si estos existen en el JSON
+        if (typeof(enjuego.partidos[0].pilotos) != 'undefined' && enjuego.partidos[0].estado_partido != 'siguiente') 
+        {
+            //Borramos las cajitas de equipo que sean hijos directos de la competicion
+            $(teams).find('.equipo').remove();
+
+            /* Para cada piloto
+                pilotos:
+                  0 => abr: VET
+                       equipo: mclaren
+                       img: ...
+                       link: ...
+                       nom: Holiii
+                       nom_norm: sebastian_vettel
+                       pos: 2
+                       tiempo: 3.500 seg
+                  1 => ...
+                  2 => ...
+                  3 => ...
+                  4 => ...
+             */
+            $.each(enjuego.partidos[0].pilotos, function(j, val) 
+            {
+                //Reseteamos la posición del piloto
+                class_destacado = "";
+                if (val.pos <= 3) {
+                    class_destacado = " destacado";
+                }
+
+                if(val.pos > 1)
+                {
+                  tiempo= (val.tiempo!="")?'a '+val.tiempo:"";
+                }
+                else
+                {
+                  tiempo=(val.tiempo!="")?val.tiempo:"";
+                }
+
+               //Regeneramos el código de la cajita (nueva pos, nuevo nombre, nuevo tiempo y nueva imagen)                
+                html_cajita = "<div class=\"equipo\"><div class=\"equipo-info\"><span class=\"pos" + class_destacado + "\">" + val.pos + "</span><span class=\"tiempo\">" + tiempo + "</span></div><p class=\"piloto\">" + val.nom + "</p><p class=\"equipo-piloto \">"+ val.equipo.charAt(0).toUpperCase() + val.equipo.slice(1)+"</p></div>";
+
+                //Le adjuntamos la cajita de piloto regenerada al contenedor de cajitas de pilotos
+                $(".csel-item[data-idpartido='"+enjuego.partidos[0].id+"']").append(html_cajita);
+            });
+        }
+
+        //Quitamos la clase a la cajita de la competición
+        $(teams[1]).removeClass('finalizado directo previo');
+        $(teams[2]).removeClass('finalizado directo previo');
+
+        //Dependiente del nuevo estado de la competición
+        switch (enjuego.partidos[0].estado_partido) {
+            case "enjuego":
+                ret_terminado = false;
+                $(teams[1]).addClass('directo');
+                $(teams[2]).addClass('directo');
+                $(teams[1]).find('.carrera-info').find('.tiempo').text(enjuego.partidos[0].minuto); //Actualizamos el tiempo
+
+                break;
+            case "terminado":
+                ret_terminado = true;
+                $(teams[1]).addClass('finalizado');
+                $(teams[2]).addClass('finalizado');
+
+                if (window.location.hostname.split('.')[1] == 'en') {
+                    end = "COMPLETED";
+                }
+                $(teams[1]).find('.carrera-info').find('.tiempo').text(end); //Actualizamos el texto
+
+                break;
+            case "siguiente":
+                ret_terminado = false;
+                $(teams[1]).addClass('previo');
+                $(teams[2]).addClass('previo');
+                $(teams[1]).find('.carrera-info').find('.tiempo').text(enjuego.partidos[0].hora); //Actualizamos el tiempo
+                
+                break;
+        }
+        return ret_terminado;
+    }
+
+    /**
+     *@method pintarEnjuegoTenis: Método para repintar competiciones de tenis
+     *@param Object enjuego: JSON con los valores a pintar
+
+        competicion_norm: Shanghai_1000 
+        deporte: tenis
+        fase: Regular
+        id_dep: 4
+        link_clasificacion: ...
+        link_resultados: ...
+        nombre_competicion: Shanghai 1000 
+        partidos:
+          0 => 
+              jugador1:
+                nom: Rafael Nadal
+                nom_norm: rafa_nadal
+                abr: NAD
+                imagen: ...
+                enjuego: actual
+                num_sets:5
+                sets:
+                  0 => valor: 3
+                       estado: perdido
+                  1 => valor: 6
+                       estado: ganado
+                  2 => valor: 6
+                       estado: ganado
+                  3 => valor: 3
+                       estado: perdido
+                  4 => valor: 3
+                       estado: perdido
+              
+              jugador2:
+                nom: Manolo García
+                nom_norm: manolo_garcia
+                abr: GAR
+                imagen: ...
+                enjuego: '
+                num_sets:5
+                sets:
+                  0 => valor: 3
+                       estado: perdido
+                  1 => valor: 6
+                       estado: ganado
+                  2 => valor: 6
+                       estado: ganado
+                  3 => valor: 3pintarEnJuegoFutbolBaloncesto
+                       estado: perdido
+                  4 => valor: 3
+                       estado: perdido
+
+               tv: Teledeporte
+               estado_partido: enjuego
+               minuto: 20
+               hora: 14:00
+               link: ...
+               id: 197418
+               minuto: FIN
+               apostero: ''
+               descripcion: Aspire Zone - Khalifa International Stadium
+               pais: España       
+
+     *@param Object competiciones: Objeto DOM donse se va a repintar  <div class="csel-agrup ciclismo"> 
+    **/
+    ag.pintarEnJuegoTenis = function(enjuego, competiciones) {
+
+      var end = "FINALIZADO",
+            ret_terminado = false;
+
+      //Cogemos las cajitas de la agrupación de tenis
+        //Teams
+        // 0 => Cajita del nombre de deporte (tenis) y sus datos
+        // 1 => Cajita de datos de Tenis
+        teams = $(competiciones).find('.csel-item');
+        num_comp = teams.length;
+
+        //Quitamos la clase a la cajita de la competición
+        $(teams[1]).removeClass('finalizado directo previo');
+        $(teams[1]).find("#equipo_"+enjuego.partidos[0].jugador0.nom_norm+"").removeClass('pos');
+        $(teams[1]).find("#equipo_"+enjuego.partidos[0].jugador1.nom_norm+"").removeClass('pos');
+        $(teams[1]).find('.item-content').find('.dato-group').remove();
+        $(teams[1]).find('.item-mas').find('.mas-ops').empty();
+
+
+        switch (enjuego.partidos[0].estado_partido) {
+          case "enjuego":
+            
+            ret_terminado=false;
+
+            //Le ponemos su clase
+            $(teams[1]).addClass('directo');
+
+            //Regeneramos los datos con los datos de los sets para el jugador 1 y el jugador 2
+            if (typeof(enjuego.partidos[0].jugador0.sets) != 'undefined' && typeof(enjuego.partidos[0].jugador1.sets) != 'undefined') {
+             
+              var classPos1 = (enjuego.partidos[0].jugador0.enjuego=='actual')?'pos':'';
+              var classPos2 = (enjuego.partidos[0].jugador1.enjuego=='actual')?'pos':'';
+
+              var html_jugador1_sets='<div class="dato-group '+classPos1+'">';
+              var html_jugador2_sets='<div class="dato-group '+classPos2+'">';
+
+              //Recorremos los sets y actualizamos los datos
+              $.each(enjuego.partidos[0].jugador0.sets, function(j, val) 
+              {
+                if (j === (enjuego.partidos[0].jugador0.sets.length - 1)) {
+                  html_jugador1_sets += '<span class="dato">'+val.valor+'</span>';              
+                }
+                else
+                {
+                  html_jugador1_sets += '<span class="dato '+val.estado+'">'+val.valor+'</span>';              
+                }
+
+              });
+
+              //Recorremos los sets y reconstruimos los datos
+              $.each(enjuego.partidos[0].jugador1.sets, function(k, val2) 
+              {
+                if (k === (enjuego.partidos[0].jugador1.sets.length - 1)) {
+                  html_jugador2_sets += '<span class="dato">'+val2.valor+'</span>';              
+                }
+                else
+                {
+                  html_jugador2_sets += '<span class="dato '+val2.estado+'">'+val2.valor+'</span>';              
+                }             
+              });
+
+              html_jugador1_sets +='</div>';
+              html_jugador2_sets +='</div>';
+
+             $(teams[1]).find("#equipo_"+enjuego.partidos[0].jugador0.nom_norm+"").append(html_jugador1_sets);
+             $(teams[1]).find("#equipo_"+enjuego.partidos[0].jugador1.nom_norm+"").append(html_jugador2_sets);
+                                
+
+             $(teams[1]).find("#equipo_"+enjuego.partidos[0].jugador0.nom_norm+"").addClass(classPos1);
+             $(teams[1]).find("#equipo_"+enjuego.partidos[0].jugador1.nom_norm+"").addClass(classPos2);
+       
+            }//sets
+
+            //Regeneramos opciones del hover
+            $(teams[1]).find('.item-mas').find('.mas-ops').append('<li><a href="'+enjuego.link+'">Directo</a></li><li><a href="'+enjuego.link_clasificacion+'">Clasificación</a></li>');
+
+
+          break;
+
+          case "terminado":
+
+            $(teams[1]).addClass('finalizado');
+
+            //Regeneramos los datos con los datos de los sets para el jugador 1 y el jugador 2
+            if (typeof(enjuego.partidos[0].jugador0.sets) != 'undefined' && typeof(enjuego.partidos[0].jugador1.sets) != 'undefined') {
+             
+              var classPos1 = (enjuego.partidos[0].jugador0.enjuego=='actual')?'pos':'';
+              var classPos2 = (enjuego.partidos[0].jugador1.enjuego=='actual')?'pos':'';
+       
+
+              var html_jugador1_sets='<div class="dato-group">';
+              var html_jugador2_sets='<div class="dato-group">';
+
+              //Recorremos los sets y actualizamos los datos
+              $.each(enjuego.partidos[0].jugador0.sets, function(j, val) 
+              {
+                html_jugador1_sets += '<span class="dato '+val.estado+'">'+val.valor+'</span>';              
+              });
+
+              //Recorremos los sets y reconstruimos los datos
+              $.each(enjuego.partidos[0].jugador1.sets, function(k, val2) 
+              {
+                html_jugador2_sets += '<span class="dato '+val2.estado+'">'+val2.valor+'</span>';                       
+              });
+
+              html_jugador1_sets +='</div>';
+              html_jugador2_sets +='</div>';
+
+             $(teams[1]).find("#equipo_"+enjuego.partidos[0].jugador0.nom_norm+"").append(html_jugador1_sets);
+             $(teams[1]).find("#equipo_"+enjuego.partidos[0].jugador1.nom_norm+"").append(html_jugador2_sets);
+       
+            }
+
+            //Regeneramos opciones del hover
+            $(teams[1]).find('.item-mas').find('.mas-ops').append('<li><a href="'+enjuego.link_resultados+'">Resultados</a></li>');
+
+
+            ret_terminado=true;
+            break;
+
+          case "siguiente":
+            ret_terminado=false;
+         
+            $(teams[1]).addClass('previo');
+
+            //Regeneramos los datos con los datos de los sets para el jugador 1 y el jugador 2
+            if (typeof(enjuego.partidos[0].jugador0.sets) != 'undefined' && typeof(enjuego.partidos[0].jugador1.sets) != 'undefined') {
+
+              var html_jugador1_sets='<div class="dato-group"><span class="dato">('+enjuego.partidos[0].jugador0.num_sets+')</span></div>';
+              var html_jugador2_sets='<div class="dato-group"><span class="dato">('+enjuego.partidos[0].jugador1.num_sets+')</span></div>';
+            }
+
+            $(teams[1]).find("#equipo_"+enjuego.partidos[0].jugador0.nom_norm+"").append(html_jugador1_sets);
+            $(teams[1]).find("#equipo_"+enjuego.partidos[0].jugador1.nom_norm+"").append(html_jugador2_sets);
+
+            //Regeneramos opciones del hover
+            $(teams[1]).find('.item-mas').find('.mas-ops').append('<li><a href="'+enjuego.link+'">Previo</a></li>');
+            
+            break;
+        }
+
+        return ret_terminado;
+
+
+    }
+
+    /**
+     *@method pintarEnjuegoCiclismo: Método para repintar competiciones de ciclismo
+     *@param Object enjuego: JSON con los valores a pitnar
+
+        competicion_norm: mundial
+        deporte: ciclismo
+        fase: Regular
+        id_dep: 8
+        link_clasificacion: ...
+        link_resultados: ...
+        nombre_competicion: Mundial Ciclismo
+        partidos:
+          0 => 
+               ciclistas:
+                0 => abr: C1
+                     link: ...
+                     nom: Ciclista1
+                     nom_norm: ciclista_1
+                     pos: 1
+                     tiempo: 3.500 seg
+                     tipo_ ciclista
+                1 => ...
+                2 => ...
+               descripcion: Aspire Zone - Khalifa International Stadium
+               estado_partido: enjuego
+               hora: 14:00
+               id: 197418
+               imagen_recorrido_perfil_etapa: ...
+               km_totales: 257 Km.
+               link: ...
+               minuto: FIN
+               num_ciclistas: 3
+               progreso: 24
+               tv: Teledeporte      
+
+     *@param Object competiciones: Objeto DOM donse se va a repintar  <div class="csel-agrup ciclismo"> 
+     **/
+    ag.pintarEnJuegoCiclismo = function(enjuego, competiciones) {
+
+        var end = "FINALIZADO",
+            ret_terminado = false;
+
+        //Cogemos las cajitas de la agrupación de ciclismo
+        //Teams
+        // 0 => Cajita del nombre de deporte (ciclismo)
+        // 1 => Cajita del nombre de la competición
+        // 2 => Caja que contiene las cajitas de ciclistas
+        teams = $(competiciones).find('.csel-item');
+        num_comp = teams.length;
+
+        //Quitamos la clase a la cajita de la competición
+        $(teams[1]).removeClass('finalizado directo previo');
+        $(teams[2]).removeClass('finalizado directo previo');
+
+        switch (enjuego.partidos[0].estado_partido) {
+            case "enjuego":
+                //De la cajita 2: actualizamos imagen de la etapa, km a meta y clase
+                //De la cajeta 3: actualizamos textos de grupos y tiempos de cada grupo
+                ret_terminado = false;
+                //Cajita 2
+                $(teams[1]).addClass('directo');
+
+                //Regeneramos tiempo
+                $(teams[1]).find('.item-content').find('.item-info').empty();
+                html_tiempo='<span class=\"tiempo\">'+enjuego.partidos[0].minuto + 'KM META'+'</span>';
+                $(teams[1]).find('.item-content').find('.item-info').append(html_tiempo);
+
+                //Modificamos imagen
+                $(teams[1]).find('.etapa-img').find("img").attr("src",'http://as01.epimg.net'+enjuego.partidos[0].imagen_recorrido_perfil_etapa);
+                //Modificamos progreso
+                $(teams[1]).find('.etapa-img').find('.progreso').css("width", ""+enjuego.partidos[0].progreso+"%");
+               
+                //Cajita 3
+                $(teams[2]).addClass('directo');
+                //Si hay ciclistas (debería en este caso pero por si acaso)
+                if (typeof(enjuego.partidos[0].ciclistas) != 'undefined') 
+                {
+                  $(teams[2]).empty(); //Borramos todo el contenido de la cajita
+
+                  html_cajita = '<div class=\"clasificacion-etapa\"><table class=\"tabla-ciclismo\">';
+                  html_cajita += '<caption>'+enjuego.partidos[0].descripcion+'</caption><colgroup><col><col></colgroup>';
+                  html_cajita += '<thead><tr><th scope=\"col\">Corredor</th><th scope=\"col\">Tiempo</th></tr></thead><tbody>';
+
+
+                  //Recorremos los ciclistas y reconstruimos la tabla
+                  $.each(enjuego.partidos[0].ciclistas, function(j, val) 
+                  {
+                    //Regeneramos el código de la fila del ciclista con su tiempo
+                    html_cajita+='<tr><td class=\"cont-nombre\"><a href="'+val.link+'" class=\"nombre\">'+val.nom+'</a></td>';
+                    html_cajita+='<td class=\"cont-tiempos\"><span class=\"tiempos\">'+val.tiempo+'</span></td></tr>';        
+                   });
+
+                  html_cajita += '</tbody></table></div>';
+
+                }
+                //Le adjuntamos la cajita de piloto regenerada al contenedor de cajitas de pilotos
+                $(".csel-item[data-idpartido='"+enjuego.partidos[0].id+"']").append(html_cajita);
+                break;
+
+            case "terminado":
+                //De la cajita 2: actualizamos texto con fin, imagen de la etapa
+                //De la cajita 3: actualizamos textos de ciclistas y tiempos de cada ciclista 
+                ret_terminado = true;
+                //Cajita 2
+                $(teams[1]).addClass('finalizado');
+                if (window.location.hostname.split('.')[0] == 'en') {
+                    end = "COMPLETED";
+                }
+                $(teams[1]).find('.item-info').find('.tiempo').text(end); //Actualizamos el tiempo
+                $(teams[1]).find('.etapa-img').find("img").attr("src",'http://as01.epimg.net'+enjuego.partidos[0].imagen_recorrido_perfil_etapa);
+
+                //Regeneramos progreso
+                $(teams[1]).find('.etapa-img').find('.progreso').css("width", ""+enjuego.partidos[0].progreso+"%");
+
+                //Cajita 3
+                $(teams[2]).addClass('finalizado');
+                 //Si hay ciclistas (debería en este caso pero por si acaso)
+                if (typeof(enjuego.partidos[0].ciclistas) != 'undefined') 
+                {
+                  $(teams[2]).empty(); //Borramos todo el contenido de la cajita
+
+                  html_cajita = '<div class=\"clasificacion-etapa\"><table class=\"tabla-ciclismo\">';
+                  html_cajita += '<caption>'+enjuego.partidos[0].descripcion+'</caption><colgroup><col><col></colgroup>';
+                  html_cajita += '<thead><tr><th scope=\"col\">Corredor</th><th scope=\"col\">Tiempo</th></tr></thead><tbody>';
+
+
+                  //Recorremos los ciclistas y reconstruimos la tabla
+                  $.each(enjuego.partidos[0].ciclistas, function(j, val) 
+                  {
+                    //Regeneramos el código de la fila del ciclista con su tiempo
+                    html_cajita+='<tr><td class=\"cont-nombre\"><a href="'+val.link+'" class=\"nombre\">'+val.nom+'</a></td>';
+                    html_cajita+='<td class=\"cont-tiempos\"><span class=\"tiempos\">'+val.tiempo+'</span></td></tr>';        
+                   });
+
+                  html_cajita += '</tbody></table></div>';
+
+                }
+                //Le adjuntamos la cajita de piloto regenerada al contenedor de cajitas de pilotos
+                $(".csel-item[data-idpartido='"+enjuego.partidos[0].id+"']").append(html_cajita);
+
+                
+                break;
+            case "siguiente":
+                //De la cajita 2: quitar cuadrito de tiempo e imagen de etapa
+                //De la cajita 3: eliminarla
+                ret_terminado = false;
+
+                //Cajita 2
+                $(teams[1]).addClass('previo');
+                $(teams[1]).find('.item-info').empty();
+                $(teams[1]).find('.etapa-img').find("img").attr("src",'http://as01.epimg.net'+enjuego.partidos[0].imagen_recorrido_perfil_etapa);
+
+                //Cajita 3
+                $(teams[2]).addClass('previo');
+                $(teams[2]).empty();
+
+                break;
+        }
+        return ret_terminado;
+    }
+
+    ag.calculateWidth = function () {
+
+      width_max = 0;
+      csel_groups_widths = [];
+
+      csel_groups = $(ag_target + ' .csel-agenda .csel-agrup').length;
+
+      /* Recorremos los grupos para calcular la anchura máxima y un array con los anchos de los items */
+      for (i=0; i< csel_groups; i++) { 
+
+        var item = $(ag_target + ' .csel-agenda .csel-agrup')[i];     
+        var width_temp = $(item).outerWidth(true);
+
+       csel_groups_widths.push(width_temp);
+
+       width_max += width_temp;
+      }
+
+      csel.find('.csel-content').width(width_max);
+
+    } 
+
+    /* Calculamos las anclas de las diferentes agrupaciones */
+    ag.calculateWaypoints = function () {
+
+      var temp_width = 0;
+      var current_width = 0;
+      waypoints_desplegable = [];
+      waypoints_flechas = [];
+      waypoints = [];
+
+      /* Calculamos los puntos de corte de ambos modos de navegación, para poder recalcular entre ellos en caso de error */
+      width_available_flechas = $(ag_target + ' .csel-wrap').width() - arrow_padding;
+      width_available_desplegable = $('.csel-content').width() - arrow_padding;
+
+      waypoints = [0];
+      waypoints_desplegable = [0];
+      waypoints_flechas = [0];
+      id_waypoints = [];
+
+      //Recorremos los items y creamos un array con las anclas
+      for (i=0; i< csel_items; i++) { 
+
+        var item = $(ag_target + ' .csel-agenda .csel-item')[i];
+        var item_width = $(item).outerWidth(true);
+        
+        temp_width += item_width;
+
+        //Calculamos puntos de corte de las flechas
+        if (temp_width >= width_available_flechas || ($(item).hasClass('title') && current_width > 0)) {
+
+            waypoints_flechas.push (current_width);
+            temp_width = item_width;
+        }
+
+        //Calculamos puntos de corte del desplegable
+        if (temp_width >= width_available_desplegable || ($(item).hasClass('title') && current_width > 0)) {
+
+            waypoints_desplegable.push (current_width);
+            temp_width = item_width;
+        }
+
+        //...ids
+        if($(item).attr('id') !== undefined) id_waypoints.push ([waypoints.length - 1, $(item).attr('id')]);
+
+        //...
+        current_width += item_width;
+
+      }
+
+      //Asigansmo los puntos de corte actuales en función del modo de navegación que se esté utilizando
+      if(desdeDesplegable == 0)
+      {
+        waypoints = waypoints_flechas;
+      }
+      else
+      {
+        waypoints = waypoints_desplegable;
+      }
+
+    }
+
+     ag.recalculateIndex = function () {
+
+      pos = 0;
+      for (i=0;i<waypoints.length;i++) {
+
+          if (waypoints[i] > old_index) {
+
+            pos = i-1;
+            break;
+          }
+      }
+      if (pos < 0) pos = 0;
+
+    }
+
+    /**
+    *@method calcularScroll: Se calcula el scrolltop
+    **/
+    function calcularScroll(id) {
+        var scroll = 0;
+        $.each(competiciones_json, function(i, val) {
+
+            if (val.id == id) {
+                return false;
+            }
+           scroll += $("#comp-" + val.id).parent().innerHeight();
+        });
+        return scroll;
+    }
+    
+    ag.events = function () {
+
+      //Comprotamiento para que se despliegue el selector de Competiciones
+      $('#desplegableCompeticion a:first').click(function(e) {
+
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+         if ($(this).parent('div').find('.desplegable').hasClass('hide')) {
+            $(this).parent('div').find('.desplegable').removeClass('hide');
+            $(this).addClass('active');
+        } else {
+            $(this).parent('div').find('.desplegable').addClass('hide');
+            $(this).removeClass('active');
+        }
+
+      });
+
+      //SELECTOR COMPETICIONES
+      $('#desplegableCompeticion ul.desplegable >li a').click(function(e) {
+          if ($('.btn-endirecto').is(':visible')) { // VERSIÓN MÓVIL
+
+            var div_to = $(this).attr('data-comp').replace('comp-', '');
+            var scrollTo = calcularScroll(div_to);
+
+            $('.csel-wrap').animate({
+                scrollTop: scrollTo 
+            }, 1000);
+
+            //$('.buscador').find('#desplegableCompeticion a:first').text($($('ul.desplegable:first >li:first a').get(0)).text());
+            $('.buscador').find('.caja-desplegable a:first').text($(this).text());
+
+          } else { //VERSIÓN DESKTOP
+
+            e.preventDefault();
+            posSeleccionada=e.target.dataset.pos;
+            desdeDesplegable=1;
+
+            /* Comprobamos los modos de navegación, para comprobar si se ha cambiado */
+            if(modo_navegacion == "flechas")
+            {
+              modo_navegacion = "desplegable";
+              modo_navegacion_anterior = "flechas";
+              waypoints_anterior = waypoints_flechas;
+            } else {
+              modo_navegacion = "desplegable";
+              modo_navegacion_anterior = "desplegable";
+              waypoints_anterior = waypoints_desplegable;
+            }
+          
+            ag.calculateWaypoints();
+            ag.moveDirH(1);
+
+          }
+
+          if ($('#desplegableCompeticion').find('.desplegable').hasClass('hide')) {
+            $('#desplegableCompeticion').find('.desplegable').removeClass('hide');
+            $(this).addClass('active');
+           } else {
+            $('#desplegableCompeticion').find('.desplegable').addClass('hide');
+            $(this).removeClass('active');
+          }
+           
+          $('.buscador').find('.caja-desplegable a:first').text($(this).text());
+          $('.buscador').find('.caja-desplegable a:first').removeClass('active');
+
+
+      });
+
+      //FLECHAS
+      //Izquierda
+      $(ag_target + ' .arrow-left').on('click', function (e) { 
+          desdeDesplegable=0;
+ 
+          /* Comprobamos los modos de navegación, para comprobar si se ha cambiado */
+          if(modo_navegacion == "desplegable")
+          {
+            modo_navegacion = "flechas";
+            modo_navegacion_anterior = "desplegable";
+            waypoints_anterior = waypoints_desplegable;
+          } else {
+            modo_navegacion = "flechas";
+            modo_navegacion_anterior = "flechas";
+            waypoints_anterior = waypoints_flechas;
+          }
+          
+          ag.calculateWaypoints();
+          ag.moveDirH(0);
+          //$('.buscador').find('.caja-desplegable a:first').text($('#'+id_waypoints[pos][1]).find('.title').text());
+      });
+      //Derecha
+      $(ag_target + ' .arrow-right').on('click', function (e) { 
+          desdeDesplegable=0;
+          if(modo_navegacion == "desplegable")
+          {
+            modo_navegacion = "flechas";
+            modo_navegacion_anterior = "desplegable";
+            waypoints_anterior = waypoints_desplegable;
+          } else {
+            modo_navegacion = "flechas";
+            modo_navegacion_anterior = "flechas";
+            waypoints_anterior = waypoints_flechas;
+          }
+          
+          ag.calculateWaypoints();
+          ag.moveDirH(1);
+          //$('.buscador').find('.caja-desplegable a:first').text($('#'+id_waypoints[pos][1]).find('.title').text()); 
+      });
+
+       $('.btn-endirecto').on('click', function (e) { 
+        $(this).toggleClass('cerrar') 
+        ag.dropDown03(); 
+      });
+
+      $(window).resize(function(event) {
+        if ($(window).width() >= 768) { //No es móvil
+              ag.checkViewportV();
+              ag.calculateWidth();
+              ag.calculateWaypoints();  
+              ag.setSlider(window.slider); 
+              
+              if ( window.slider.sliderEl == false ){
+                ag.activarSwipe();
+              }
+
+          } else { //Estamos en móvil
+              if ( window.slider.sliderEl != false ) { 
+                ag.desactivarSwipe(); 
+              }            
+          }
+      });
+  
+     }
+
+     ag.activarSwipe = function () {
+        pos = 0;
+        csel_content.css("transform", "translateX(0px)");
+        window.slider.init( '.csel-content' );
+        ag.setSlider(window.slider); 
+    }
+
+    ag.desactivarSwipe = function () {
+        csel_content.removeAttr("style");
+        ag.slider.sliderManager.off('pan');
+        ag.slider.sliderEl = false;
+    }
+
+
+    ag.dropDown03 = function () {                                                         //ja     
+
+     csel.toggleClass('cerrado');
+      folded = !folded;   
+      if (folded) {
+          $('body').removeClass("agDespeglada");
+          $(window).scrollTop(posScroll);
+      } else {
+        posScroll = $(window).scrollTop();
+        $('body').addClass("agDespeglada");  
+      }
+    }
+    
+
+
+    ag.dropDown = function () {
+      csel.toggleClass('cerrado');
+      folded = !folded;
+
+      if (folded) {
+
+        $('body').css({'overflow-y': 'auto'});
+
+      } else {
+
+        $('body').css({'overflow-y': 'hidden'});
+        ag.checkViewportV();
+                 
+      }    
+    }
+
+    ag.checkViewportV = function () {
+
+      new_height_available = $(window).height() - (csel.offset().top + $(ag_target + ' .csel-fixed').outerHeight(true) + $(ag_target + ' .buscador').outerHeight(true) + $(ag_target + ' .patrocinio').outerHeight(true) + 10);
+      $(ag_target + ' .csel-wrap').height(height_available);
+
+    }
+
+    ag.checkViewportH = function () {
+
+      //check resize...
+      var new_width_available = $(ag_target + ' .csel-wrap').width() - arrow_padding;
+
+      //
+      if (new_width_available != width_available) {
+
+        width_available = new_width_available;
+        old_index = waypoints[pos];
+        ag.calculateWaypoints();
+        ag.recalculateIndex();
+      }
+
+    }
+
+    ag.gotoWaypoint = function (pos_index) {
+      
+      if ($.isNumeric(pos_index)) {
+        pos = pos_index;
+
+      } else {
+
+        for (i=0;i<id_waypoints.length;i++) {
+
+          if(id_waypoints[i][1] == pos_index) {
+
+            pos = id_waypoints[i][0];
+          }
+        }
+      }
+
+
+      //Si hemos cambiado de modo de navegacion
+      if(modo_navegacion != modo_navegacion_anterior)
+      {
+
+        /* Si el punto de corte al que estamos intentando navegar es menor que el que estamos (navegación errónea) */
+        if(waypoints_anterior[pos_index-1] >= waypoints[pos])
+        {
+
+          /* Buscamos la nueva posición lógica. Para ello, buscamos dentro de los waypoints del nuevo modo de navegación,
+          el índice del punto de corte en el que nos encontramos. A ese punto de corte equivalente, añadimos 1 posición para
+          que navegue al siguiente */
+          var nueva_posicion = (waypoints.indexOf(waypoints_anterior[pos_index-1]))+1;
+          pos = nueva_posicion;
+        }
+
+      }
+
+      var fpos = waypoints[pos] + 1;
+
+      if (fpos < 0) fpos = 0;
+
+      ag.setAnima('is-animating'); 
+
+      csel_content.css({'transform': 'translateX(-' + fpos +'px)'});  // 
+
+      ag.slider.activeSlide = pos; //para enviar la posicion a activeSlide
+      ag.slider.desplazaX = - fpos; //para enviar
+
+    }
+
+    ag.moveDirH = function (direccion) {
+
+      ag.checkViewportH();
+      //...
+
+      if(ag.slider.activeSlide != pos){  pos = ag.slider.activeSlide }  
+
+         dir = direccion;
+      if (direccion == 0) {
+
+        //hacia la izq...
+
+        if (pos > 0) {
+         pos --;
+
+        } else {
+               ag.setAnima('topeLeft'); 
+        }
+
+      } else {
+
+        //hacia la der...
+
+        if (pos < waypoints.length - 1) {
+          pos++;
+        } else {
+          ag.setAnima('topeRight');
+        }
+
+      }
+
+      if(desdeDesplegable == 1)
+      {
+        pos=posSeleccionada;
+      }
+
+      //...  
+      ag.gotoWaypoint(pos); 
+    }
+
+     ag.setSlider = function(slider){
+
+      ag.slider = slider;
+
+      ag.slider.waypoints = waypoints;
+      ag.slider.slideCount = slider.waypoints.length;;
+      //
+      ag.slider.activeSlide = pos;
+      ag.slider.desplazaX = 0;
+    }
+
+    ag.setAnima = function(nameAnima){                       
+
+    csel_content.addClass( nameAnima );  
+    //var ended = false;
+    csel_content.on("transitionend webkitTransitionEnd oTransitionEnd MSTransitionEnd", function(){ 
+           //ended = true;
+          csel_content.removeClass( nameAnima ); 
+       });
+    }
+
+  }
+

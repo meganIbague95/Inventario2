@@ -1,0 +1,1152 @@
+/*
+ * Funciones genericas para encuestas
+ */
+
+
+
+//
+// Funcion para cerrar la ventana actual
+//
+function f_cerrar_ventana() {
+    // Se cierra la ventana
+    window.close();
+}
+
+/* ESTA SE USA?? */
+
+/* Para visualizar los resultados desde verResultados.php */
+function f_carga_datos() {
+
+    var html = '';
+    var divEncuestas = null;
+
+    // Se comprueba si hay resultados
+    var numero_votos_encuesta = 0;
+    var lista_resultado_preguntas = new Array();
+    if (typeof _hashResultadosEncuesta.numero_votos != 'undefined') {
+        numero_votos_encuesta = _hashResultadosEncuesta.numero_votos;
+        lista_resultado_preguntas = _hashResultadosEncuesta.preguntas;
+    }
+
+    // Se comprueba que vienen los datos de la encuesta
+    if (typeof _hashDatosEncuesta.codigo_encuesta == 'undefined') {
+        // Se compone el html de error
+        html = html + '<div class="pregunta" id="pregunta_0">No hay resultados disponibles</div>';
+
+        // Se pinta el HTML obtenido en el div
+        divEncuestas = document.getElementById('resultados_encuesta');
+        divEncuestas.innerHTML = html;
+        return;
+    }
+
+    //
+    // TODO: Comprobar que son hash y que vienen resultados...
+    //
+
+    // Se obtienen datos de la encuesta
+    var titulo_encuesta  = _hashDatosEncuesta.titulo_encuesta;
+    var numero_preguntas = _hashDatosEncuesta.numero_preguntas;
+    var lista_preguntas  = _hashDatosEncuesta.preguntas;
+
+    html = html + '<div class="encuesta">';
+    html = html + 'Titulo encuesta: <span class="texto_titulo">' + titulo_encuesta + '</span><br/>';
+    html = html + 'Votos: <span class="texto_votos">' + numero_votos_encuesta + '</span>';
+    html = html + '</div>';
+    html = html + '<hr/>';
+
+    if (numero_preguntas > 0) {
+        // Se compone el html para las preguntas
+
+        for (i = 1; i <= numero_preguntas; i++) {
+            var clave_pregunta = 'pregunta_' + i;
+            var datos_pregunta = lista_preguntas[clave_pregunta];
+
+            // Se obtiene el titulo de la pregunta
+            var titulo_pregunta = '';
+            if (datos_pregunta.titulo_pregunta) {
+                titulo_pregunta = datos_pregunta.titulo_pregunta;
+            }
+
+            var tipo_pregunta = 1; // Por defecto, radio button
+            if (datos_pregunta.tipo_pregunta) {
+                tipo_pregunta = datos_pregunta.tipo_pregunta;
+            }
+
+            var lista_resultado_respuestas = new Array();
+            if (lista_resultado_preguntas[clave_pregunta]) {
+                lista_resultado_respuestas = lista_resultado_preguntas[clave_pregunta].respuestas;
+            }
+
+            // Se inicia el html para la pregunta
+            html = html + '<div class="pregunta" id="' + clave_pregunta + '">';
+            html = html + '<span class="titulo_pregunta"><strong>' + titulo_pregunta + '</strong></span>';
+
+            // Se procesan las respuestas
+            var numero_respuestas = datos_pregunta.numero_respuestas;
+            var lista_respuestas  = datos_pregunta.respuestas;
+
+            for (j = 1; j <= numero_respuestas; j++) {
+                // Se obtiene la respuesta y su titulo
+                var clave_respuesta = 'respuesta_' + j;
+                var titulo_respuesta = lista_respuestas[clave_respuesta];
+
+                // En funcion del tipo de la pregunta se obtiene la respuesta (votos o texto)
+                var valor_respuesta = '';
+
+                // Se obtiene el numero de votos para esa respuesta
+                var numero_votos_respuesta = 0;
+                if (lista_resultado_respuestas[clave_respuesta]) {
+                    numero_votos_respuesta = lista_resultado_respuestas[clave_respuesta];
+                }
+                valor_respuesta = numero_votos_respuesta;
+
+
+                // Se pone la respuesta....y sus votos
+                html = html + '<p>';
+                html = html + '<span class="titulo_respuesta">' + titulo_respuesta + '</span>:&nbsp;';
+                html = html + '<span class="votos_respuesta">' + valor_respuesta + '</span>';
+                html = html + '</p>';
+            }
+
+            // Fin de pregunta
+            html = html + '</div>';
+        }
+    }
+    else {
+
+    }
+
+    // Se pinta el HTML obtenido en el div
+    divEncuestas = document.getElementById('resultados_encuesta');
+    divEncuestas.innerHTML = html;
+}
+
+
+
+
+
+function f_obtener_resultados_encuesta(codigoEncuesta) {
+
+    var urlResultados = "";
+    eval("urlResultados = _urlResultados_"+codigoEncuesta+";");
+
+    EPETUtils_makeHttpRequestGet(function(httpRequest) {
+
+        if (httpRequest.status != 200) {
+            ////alert("Se ha producido un error al obtener los resultados de la encuesta (" + urlResultados + "')");
+            eval("_hashResultadosEncuesta_"+codigoEncuesta+" = {};");
+        }
+        else {
+            // Todo OK. Recibida respuesta
+            var data = httpRequest.responseText;
+
+            // Se obtiene el has de resultado
+            eval("_hashResultadosEncuesta_"+codigoEncuesta+" = " + data);
+
+            // Se pinta el numero de votos
+            f_pintar_numero_votos(codigoEncuesta);
+
+            // Se pintan los resultados
+            f_pintar_votos(codigoEncuesta);
+        }
+    }, urlResultados + "?rnd=" + Math.random());
+}
+
+
+function f_pintar_numero_votos(codigoEncuesta) {
+
+    // Se comprueba si hay resultados
+    var numero_votos_encuesta = 0;
+    var cadena_numero_respuestas = numero_votos_encuesta + ' respuesta';
+
+    var hashResultadosEncuesta = Array();
+    eval("hashResultadosEncuesta = _hashResultadosEncuesta_"+codigoEncuesta+";");
+    var numero_votos_total =0;
+
+    if (typeof hashResultadosEncuesta.numero_votos != 'undefined') {
+        numero_votos_total = hashResultadosEncuesta.numero_votos;
+
+        numero_preguntas = hashResultadosEncuesta.numero_preguntas;
+        lista_preguntas  = hashResultadosEncuesta.preguntas;
+        var numero_votos_respuesta = 0;
+        var numero_votos_respuesta_oculta = 0;
+        var lista_respuestas = new Array();
+
+        for (i = 1; i <= numero_preguntas; i++) {
+            var clave_pregunta = 'pregunta_' + i;
+            var datos_pregunta = lista_preguntas[clave_pregunta];
+            var numero_respuestas = datos_pregunta.numero_respuestas;
+
+            if (lista_preguntas[clave_pregunta]) {
+                lista_respuestas = lista_preguntas[clave_pregunta].respuestas;
+            }
+
+            for (j = 1; j <= numero_respuestas; j++) {
+
+                var clave_respuesta = 'respuesta_' + j;
+                if (document.getElementById( i+"_"+j+"_oculto" )) {
+                    if (lista_respuestas[clave_respuesta]) {
+                        // Se asigna el numero de votos
+                        numero_votos_respuesta_oculta += lista_respuestas[clave_respuesta];
+                    }
+                }
+                if(document.getElementById("encuesta-multiple")){
+                    numero_votos_respuesta_oculta = 0;
+                }
+            }
+        }
+
+        numero_votos_total = numero_votos_total - numero_votos_respuesta_oculta;
+        // Se obtiene el dato del numero de votos
+        numero_votos_encuesta = '<strong>' + numero_votos_total + '</strong>';
+
+        cadena_numero_respuestas = numero_votos_encuesta + ' respuesta';
+        if ( (hashResultadosEncuesta.numero_votos == 0) || (hashResultadosEncuesta.numero_votos > 1) ) {
+            cadena_numero_respuestas = cadena_numero_respuestas + 's';
+        }
+    }
+    else {
+        // No existe el numero de votos
+        cadena_numero_respuestas = '--';
+    }
+
+    // Se pone el valor en el div del numero de votos
+    if (document.getElementById('div_numero_respuestas_'+codigoEncuesta)) {
+        var divNumeroEncuestas = document.getElementById('div_numero_respuestas_'+codigoEncuesta);
+        divNumeroEncuestas.innerHTML = cadena_numero_respuestas;
+    }
+}
+
+
+function f_pintar_votos(codigoEncuesta) {
+
+    // Se comprueba si hay resultados
+    var numero_votos_encuesta = 0;
+    var lista_preguntas = new Array();
+    var hashResultadosEncuesta = Array();
+    var total_respuestas_mostrar = 11;
+    eval("hashResultadosEncuesta = _hashResultadosEncuesta_"+codigoEncuesta+";");
+
+    if (typeof hashResultadosEncuesta.numero_votos != 'undefined') {
+        numero_votos_encuesta = hashResultadosEncuesta.numero_votos;
+    }
+
+    if(document.getElementById('numero_resultados_mostrar') && document.getElementById('numero_resultados_mostrar').value >=11)
+        total_respuestas_mostrar = document.getElementById('numero_resultados_mostrar').value;
+
+    // Se obtiene el numero de preguntas
+    var numero_preguntas = 0;
+    if (typeof hashResultadosEncuesta.numero_preguntas != 'undefined') {
+        numero_preguntas = hashResultadosEncuesta.numero_preguntas;
+        lista_preguntas  = hashResultadosEncuesta.preguntas;
+    }
+    var lista_preguntas_multi = lista_preguntas;
+    // Si no hay votos o preguntas no se hace nada...
+    if ( (numero_votos_encuesta == 0) || (numero_preguntas == 0) )  {
+        return;
+    }
+
+    var respuestas_mas_votadas_por_pregunta = new Array();
+    var respuestas_multiples_mas_votadas_por_pregunta = new Array();
+    var sortable = new Array();
+    // Se procesan las preguntas
+    for (i = 1; i <= numero_preguntas; i++) {
+
+        // Se obtiene la pregunta
+        var clave_pregunta = 'pregunta_' + i;
+        var datos_pregunta = lista_preguntas[clave_pregunta];
+
+        // Se obtiene la lista de respuestas de esa pregunta
+        var lista_respuestas = new Array();
+        if (lista_preguntas[clave_pregunta]) {
+            lista_respuestas = lista_preguntas[clave_pregunta].respuestas;
+        }
+
+        var respuestas_minima = new Array();
+        if(document.getElementById("respuestas_minima_"+i))
+            respuestas_minima[i] = document.getElementById("respuestas_minima_"+i).value;
+        else
+            respuestas_minima[i] = 0;
+
+        var respuestas_maximas = new Array();
+        if(document.getElementById("respuestas_maxima_"+i))
+            respuestas_maximas[i] = document.getElementById("respuestas_maxima_"+i).value;
+        else
+            respuestas_maximas[i] = 0;
+
+        ////////////////////////////////////////////////////////////////////////
+        // Se obtiene el numero total de respuestas de esa pregunta
+        var numero_total_votos_pregunta = 0;
+        var numero_respuestas = datos_pregunta.numero_respuestas;
+
+        for (j = 1; j <= numero_respuestas; j++) {
+            // Se obtiene la clave respuesta
+            if(!document.getElementById('encuesta-multiple_si_no')){
+                var clave_respuesta = 'respuesta_' + j;
+                // Se obtiene el numero de votos
+                var numero_votos_respuesta = 0;
+                if (!document.getElementById( i+"_"+j+"_oculto" )) {
+                    if (lista_respuestas[clave_respuesta]) {
+                        // Se asigna el numero de votos
+                        numero_votos_respuesta = lista_respuestas[clave_respuesta];
+                        numero_total_votos_pregunta = numero_total_votos_pregunta + numero_votos_respuesta;
+                    }
+                }
+            }else{
+                var clave_respuesta_si = 'respuesta_' + j + '_si';
+                var clave_respuesta_no = 'respuesta_' + j + '_no';
+                // Se obtiene el numero de votos
+                var numero_votos_respuesta = 0;
+                if (!document.getElementById( i+"_"+j+"_oculto" )) {
+                    if (lista_respuestas[clave_respuesta_si]) {
+                        // Se asigna el numero de votos
+                        numero_votos_respuesta_si = lista_respuestas[clave_respuesta_si];
+                        numero_total_votos_pregunta = numero_total_votos_pregunta + numero_votos_respuesta_si;
+                    }
+                    if (lista_respuestas[clave_respuesta_no]) {
+                        // Se asigna el numero de votos
+                        numero_votos_respuesta_no = lista_respuestas[clave_respuesta_no];
+                        numero_total_votos_pregunta = numero_total_votos_pregunta + numero_votos_respuesta_no;
+                    }
+                }
+
+            }
+        }
+        ////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////
+        if(!document.getElementById(i+"_oculto")){
+            var e =0;
+            for (var respuesta in lista_respuestas){
+                if(!document.getElementById( i+"_"+(e+1)+"_oculto" )){
+                     sortable.push([i,e,lista_respuestas[respuesta]]);
+                }
+                e++;
+            }
+        }
+             //console.log(sortable);
+
+        // Se procesan las respuestas de esa pregunta
+        var numero_respuestas = datos_pregunta.numero_respuestas;
+        var mayor_numero_votos_respuesta = 1;
+        var respuestas_mas_votadas = new Array();
+        for (j = 1; j <= numero_respuestas; j++) {
+
+            if(!document.getElementById('encuesta-multiple_si_no')){
+                // Se obtiene la clave respuesta
+                var clave_respuesta = 'respuesta_' + j;
+
+                // Se obtiene el numero de votos
+                var numero_votos_respuesta = 0;
+                var valor_porcentaje_votos = 0;
+                var valor_porcentaje_barra = 0;
+                if (!document.getElementById( i+"_"+j+"_oculto" )) {
+                    if (lista_respuestas[clave_respuesta]) {
+
+                        // Se asigna el numero de votos
+                        numero_votos_respuesta = lista_respuestas[clave_respuesta];
+                        if (numero_votos_respuesta > mayor_numero_votos_respuesta) {
+                            respuestas_mas_votadas = new Array();
+                            respuestas_mas_votadas.push(j-1);
+                            mayor_numero_votos_respuesta = numero_votos_respuesta;
+                        } else if (numero_votos_respuesta == mayor_numero_votos_respuesta) {
+                            respuestas_mas_votadas.push(j-1);
+                        }
+
+                        // Se obtiene el porcentaje de los votos
+                        //valor_porcentaje_votos = (numero_votos_respuesta / numero_votos_encuesta) * 100;
+                        valor_porcentaje_votos = (numero_votos_respuesta / numero_total_votos_pregunta) * 100;
+                        valor_porcentaje_votos = valor_porcentaje_votos.toFixed(2);//toPrecision(4);
+
+                        // Se obtiene el porcentaje de la barra
+                        // Es el 85% del valor, para que entre el literal
+                        valor_porcentaje_barra = valor_porcentaje_votos * 0.85;
+                        valor_porcentaje_barra = valor_porcentaje_barra.toFixed(2);//toPrecision(4);
+                    }
+                }
+
+                // Se pintan los datos obtenidos de la respuesta
+                var codigo_campo = i + '_' + j;
+                var divBarraRespuesta = document.getElementById('valor_barra_' + codigo_campo + '_' + codigoEncuesta);
+                var divPorcentajeRespuesta = document.getElementById('valor_porcentaje_' + codigo_campo + '_' + codigoEncuesta);
+
+                var cadena_numero_respuestas = '';
+                if (typeof numero_votos_respuesta != 'undefined') {
+                    cadena_numero_respuestas = '<strong class="em-res-dato">' + numero_votos_respuesta + '</strong> voto';
+                    if ( (numero_votos_respuesta == 0) || (numero_votos_respuesta > 1) ) {
+                        cadena_numero_respuestas = cadena_numero_respuestas + 's';
+                    }
+                }
+                else {
+                    // No existe el numero de votos
+                    cadena_numero_respuestas = '--';
+                }
+
+                var divVotosRespuesta = document.getElementById('valor_votos_' + codigo_campo + '_' + codigoEncuesta);
+
+                if (divBarraRespuesta) {
+                    divBarraRespuesta.style.width = valor_porcentaje_barra + '%';
+                }
+                //divVotosRespuesta.innerHTML   = valor_porcentaje_votos + '% (' + numero_votos_respuesta + ')';
+                if (divPorcentajeRespuesta) {
+                    divPorcentajeRespuesta.innerHTML   = valor_porcentaje_votos + '%';
+                }
+                if (divVotosRespuesta) {
+                    divVotosRespuesta.innerHTML   = cadena_numero_respuestas;
+                }
+
+            }else{
+
+                var codigo_campo = i + '_' + j;
+
+                ////// SI
+                var clave_respuesta_si = 'respuesta_' + j+'_si';
+                if (lista_respuestas[clave_respuesta_si]) {
+
+                    numero_votos_respuesta_si = lista_respuestas[clave_respuesta_si];
+
+                    valor_porcentaje_votos_si = (numero_votos_respuesta_si / numero_total_votos_pregunta) * 100;
+                    valor_porcentaje_votos_si = valor_porcentaje_votos_si.toFixed(2);
+
+                    var cadena_numero_respuestas_si = '';
+                    if (typeof numero_votos_respuesta_si != 'undefined') {
+                        cadena_numero_respuestas_si = 'SI <strong class="em-res-dato em-res-si">' + numero_votos_respuesta_si + '</strong> voto';
+                        if ( (numero_votos_respuesta_si == 0) || (numero_votos_respuesta_si > 1) ) {
+                            cadena_numero_respuestas_si = cadena_numero_respuestas_si + 's';
+                        }
+                        cadena_numero_respuestas_si = cadena_numero_respuestas_si + '<strong class="s-right em-res-por">'+valor_porcentaje_votos_si+'%</strong>';
+                    }
+                    else {
+                        // No existe el numero de votos
+                        cadena_numero_respuestas_si = '--';
+                    }
+
+                    var divVotosRespuesta_si = document.getElementById('valor_votos_' + codigo_campo + '_' + codigoEncuesta +'_si');
+                    if (divVotosRespuesta_si) {
+                        divVotosRespuesta_si.innerHTML   = cadena_numero_respuestas_si;
+                    }
+                }
+
+                ////// NO
+                var clave_respuesta_no = 'respuesta_' + j+'_no';
+                if (lista_respuestas[clave_respuesta_no]) {
+
+                    numero_votos_respuesta_no = lista_respuestas[clave_respuesta_no];
+                    valor_porcentaje_votos_no = (numero_votos_respuesta_no / numero_total_votos_pregunta) * 100;
+                    valor_porcentaje_votos_no = valor_porcentaje_votos_no.toFixed(2);
+
+                    var cadena_numero_respuestas_no = '';
+                    if (typeof numero_votos_respuesta_no != 'undefined') {
+                        cadena_numero_respuestas_no = 'NO <strong class="em-res-dato em-res-no">' + numero_votos_respuesta_no + '</strong> voto';
+                        if ( (numero_votos_respuesta_no == 0) || (numero_votos_respuesta_no > 1) ) {
+                            cadena_numero_respuestas_no = cadena_numero_respuestas_no + 's';
+                        }
+                        cadena_numero_respuestas_no = cadena_numero_respuestas_no + '<strong class="s-right em-res-por">'+valor_porcentaje_votos_no+'%</strong>';
+                    }
+                    else {
+                        // No existe el numero de votos
+                        cadena_numero_respuestas_no = '--';
+                    }
+
+                    var divVotosRespuesta_no = document.getElementById('valor_votos_' + codigo_campo + '_' + codigoEncuesta +'_no');
+                    if (divVotosRespuesta_no) {
+                        divVotosRespuesta_no.innerHTML   = cadena_numero_respuestas_no;
+                    }
+                }
+
+                if(Math.floor(numero_votos_encuesta/2)<lista_respuestas[clave_respuesta_si]){
+                    respuestas_mas_votadas.push(j-1);
+                }
+            }
+        }
+
+        respuestas_mas_votadas_por_pregunta[i] = respuestas_mas_votadas;
+
+    }
+
+    sortable.sort(function(a, b) {return b[2] - a[2]});
+
+    for (i = 1; i <= numero_preguntas; i++) {
+        var count = 0;
+        var respuestas_multiples_mas_votadas = new Array();
+        sortable.forEach(function(element, index, array){
+                if(count < total_respuestas_mostrar){
+                   if(element[0] == i)
+                    respuestas_multiples_mas_votadas.push(element[1]);
+
+                }
+                count++;
+        });
+
+        respuestas_multiples_mas_votadas_por_pregunta[i] = respuestas_multiples_mas_votadas;
+    }
+
+
+    // Dar estilos destacado a las respuestas con el número mayor de votos
+    $('#resultados_encuesta_' + codigoEncuesta + ' ul.res-encuesta').each(function( ask_index ) {
+        $(this).find('li').each(function( answer_index ) {
+            if (jQuery.inArray(answer_index, respuestas_mas_votadas_por_pregunta[ask_index + 1]) != -1) {
+                $(this).addClass("activo");
+            } else if ($(this).hasClass("activo")) {
+                $(this).removeClass("activo");
+            }
+        });
+    });
+    if(!document.getElementById('encuesta-multiple_si_no')){
+        $('#resultados_' + codigoEncuesta + ' ul.inl-list').each(function( ask_index ) {
+            $(this).find('li').each(function( answer_index ) {
+                if (jQuery.inArray(answer_index, respuestas_multiples_mas_votadas_por_pregunta[ask_index + 1]) != -1) {
+                    $(this).addClass("seleccionado");
+                } else if ($(this).hasClass("seleccionado")) {
+                    $(this).removeClass("seleccionado");
+                }
+            });
+        });
+    }else{
+        $('#resultados_' + codigoEncuesta + ' ul.inl-list').each(function( ask_index ) {
+            $(this).find('li').each(function( answer_index ) {
+                if (jQuery.inArray(answer_index, respuestas_mas_votadas_por_pregunta[ask_index + 1]) != -1) {
+                    $(this).addClass("seleccionado");
+                } else if ($(this).hasClass("seleccionado")) {
+                    $(this).removeClass("seleccionado");
+                }
+            });
+        });
+    }
+}
+
+
+
+/*
+ * Para las pestanas
+ *
+ */
+function f_mostrar_votacion(codigoEncuesta) {
+    // Limpiamos mensaje de alerta
+    f_limpiar_mensaje();
+
+    // Se resetean los campos de la votacion..por si acaso
+    //document.formulario.reset();
+    document.getElementById('formulario_'+codigoEncuesta).reset();
+
+    // Se activan las pestana correspondientes
+    //var pestana_votacion   = document.getElementById('pestana_votacion_'+codigoEncuesta);
+    //pestana_votacion.className = 'activo';
+    //var pestana_resultados = document.getElementById('pestana_resultados_'+codigoEncuesta);
+    //pestana_resultados.className = '';
+
+    // Se oculta el div de resultados y se muestra el de la votacion (preguntas)
+    var div_votacion   = document.getElementById('formulario_'+codigoEncuesta);
+    div_votacion.style.display = '';
+    var div_resultado = document.getElementById('resultados_'+codigoEncuesta);
+    div_resultado.style.display = 'none';
+
+    $('form[id^="formulario_"] ul.lst-encuesta-video li .bg-media-shadow').each(function( key, index ) {
+        $(index).find('.respuesta-encuesta').remove();
+        $(index).find('.formulario-encuesta').show();
+        $(index).parents('.lst-encuesta-video').removeClass('res-encuesta');
+        $(index).parents('.encuesta-video').removeClass('resultados');
+        $(index).parents('.encuesta-video').removeClass('resultados-videos');
+    });
+
+    // Se oculta el div de botones de votación y se muestra el de resultados
+    var div_votacion   = document.getElementById('botones_votacion_'+codigoEncuesta);
+    div_votacion.style.display = '';
+    var div_resultado = document.getElementById('botones_resultados_'+codigoEncuesta);
+    div_resultado.style.display = 'none';
+
+    $li = $("ul.respuesta_checkbox li");
+    $li.removeClass("marcado").filter(this).removeClass("marcado").find("input").prop("checked", true);
+
+    $li = $("ul.respuesta_radio li");
+    $li.removeClass("marcado").filter(this).removeClass("marcado").find("input").prop("checked", true);
+
+    if($('#resultados-wp'))
+        $('#resultados-wp').removeClass('resultados');
+
+    if($('#encuesta-multiple'))
+        $('#encuesta-multiple').removeClass('resultados');
+
+    if($('#encuesta-multiple_si_no'))
+        $('#encuesta-multiple_si_no').removeClass('resultados');
+
+    // Se oculta el div de info
+    f_mostrar_capa_info('', '', 'none', codigoEncuesta);
+
+}
+
+function f_mostrar_resultados(codigoEncuesta) {
+
+    // Se activan las pestana correspondientes
+   if ( document.getElementById('pestana_votacion_'+codigoEncuesta) ) {
+       var pestana_votacion   = document.getElementById('pestana_votacion_'+codigoEncuesta);
+        pestana_votacion.className = '';
+    }
+   if ( document.getElementById('pestana_resultados_'+codigoEncuesta) ) {
+       var pestana_resultados = document.getElementById('pestana_resultados_'+codigoEncuesta);
+       pestana_resultados.className = 'activo';
+   }
+
+    // Se obtiene el fichero JSON con los resultados de la encuesta
+    // y se pintan los datos
+    f_obtener_resultados_encuesta(codigoEncuesta);
+
+    // Se oculta el div de preguntas y se muestra el de los resultados
+    if (document.getElementById('formulario_' + codigoEncuesta) && $('form[id^="formulario_"] ul.lst-encuesta-video').length != 1) {
+        var div_votacion = document.getElementById('formulario_'+codigoEncuesta);
+        div_votacion.style.display = 'none';
+    }
+
+    if (document.getElementById('resultados_' + codigoEncuesta)) {
+        var div_resultado = document.getElementById('resultados_'+codigoEncuesta);
+        var elementosFormulario = $('form[id^="formulario_"] ul.lst-encuesta-video li .bg-media-shadow')
+        var idResultado;
+        //Recalculamos los tamaños de los videos
+        $('div[id^="resultados_"] ul.res-encuesta li .media-info').each(function( key, index ) {
+            $(index).addClass('respuesta-encuesta');
+            $(elementosFormulario[key]).find('.media-info').addClass('formulario-encuesta');
+            if ($(index).parents('li').hasClass('activo')){
+                $(elementosFormulario[key]).parent().addClass('activo');
+            }
+            $(elementosFormulario[key]).parents('.lst-encuesta-video').addClass('res-encuesta');
+            $(elementosFormulario[key]).parents('.encuesta-video').addClass('resultados');
+            $(elementosFormulario[key]).parents('.encuesta-video').addClass('resultados-videos');
+            $(elementosFormulario[key]).find('.formulario-encuesta').hide();
+            $(index).clone().appendTo($(elementosFormulario[key]));
+        });
+
+        if ($('form[id^="formulario_"] ul.lst-encuesta-video').length != 1){
+            div_resultado.style.display = '';
+        }
+
+    }
+
+    $("div.video_MPEP").css({ 'width':'317px', 'height':'170px' });
+    $("div.img_MPEP").css({ 'width':'317px', 'height':'170px' });
+    $(".media-info").css({ 'padding':'1px' });
+
+    var div_votacion   = document.getElementById('botones_votacion_'+codigoEncuesta);
+    if (div_votacion) {
+        div_votacion.style.display = 'none';
+    }
+    var div_resultado = document.getElementById('botones_resultados_'+codigoEncuesta);
+    if (div_resultado) {
+        div_resultado.style.display = '';
+    }
+
+    $('.encuesta-multiple').addClass('resultados');
+    // Se oculta el div de preguntas y se muestra el de los resultados
+    if (document.getElementById('contenido_votacion_'+codigoEncuesta)) {
+        var div_votacion = document.getElementById('contenido_votacion_'+codigoEncuesta);
+        div_votacion.style.display = 'none';
+    }
+
+    if (document.getElementById('contenido_resultado_'+codigoEncuesta)) {
+        var div_resultado = document.getElementById('contenido_resultado_'+codigoEncuesta);
+        div_resultado.style.display = '';
+    }
+}
+
+function f_mostrar_capa_info(mensaje, class_estado, estilo_visible, codigoEncuesta) {
+
+    // Se muestra el div de informacion
+    var div_mensaje_votacion = null;
+    if ( document.getElementById('div_mensaje_votacion_'+codigoEncuesta) ) {
+        div_mensaje_votacion                = document.getElementById('div_mensaje_votacion_'+codigoEncuesta);
+        div_mensaje_votacion.className      = 'info ' + class_estado;
+        div_mensaje_votacion.style.display  = estilo_visible;
+        div_mensaje_votacion.innerHTML      = mensaje;
+    }
+
+}
+
+
+
+/*
+ * Para votar
+*/
+function f_enviar_votos_por_AJAX(codigoEncuesta) {
+
+    var encuesta_completa = f_esta_encuesta_completa(codigoEncuesta);
+    if (encuesta_completa == -1 || encuesta_completa == -2) {
+//        var capa_error_votacion = document.getElementById('capa_error_votacion');
+//        capa_error_votacion.style.display = 'block';
+        switch(encuesta_completa){
+
+            case -1: f_pintar_mensaje_validacion_incompleta();
+                    break;
+            case -2: f_pintar_mensaje_validacion_numero_respuestas();
+                    break;
+        }
+    }
+    else {
+        var firma           = document.getElementById('firma_'+codigoEncuesta).value;
+        var firma_encuesta  = document.getElementById('firma_encuesta_'+codigoEncuesta).value;
+
+        var _urlVotacion = '/encuestas/votarEncuesta.php';
+        var cadena_params = "codigo_encuesta=" + codigoEncuesta;
+        cadena_params = cadena_params + '&firma=' + firma;
+        cadena_params = cadena_params + '&firma_encuesta=' + firma_encuesta;
+        EPETUtils_makeHttpRequest(function(httpRequest) {
+
+            if (httpRequest.status != 200) {
+                //alert("Se ha producido un error al enviar los datos. Por favor, inténtalo más tarde");
+            }
+            else {
+                // Todo OK. Recibida respuesta
+                var data = httpRequest.responseText;
+                //alert("recibido: " + data);
+
+                // Se obtiene el has de resultado
+                eval("_hashResultado = " + data);
+
+                var mensaje = '<p><strong>Se ha producido un error en el registro de tu voto.</strong> Por favor, int&eacute;ntalo de nuevo m&aacute;s tarde</p>';
+                var codigo_error = _hashResultado.codigo_error;
+                if ( (codigo_error == 1) || (codigo_error == -4) ) {
+                    // Todo OK o voto ya repetido
+                    mensaje = '<p><strong>Gracias por participar.</strong> Tu voto se ha registrado correctamente</p>';
+                    f_mostrar_capa_info(mensaje, 'ok', 'block', codigoEncuesta);
+                }
+                else {
+                    if (codigo_error == -2) {
+                        // Error. Encuesta cerrada
+                        mensaje = '<p>Por motivos informativos la encuesta ya est&aacute; cerrada al voto</p>';
+                        f_mostrar_capa_info(mensaje, 'cerrado', 'block', codigoEncuesta);
+                    }
+                    else {
+                        // Otro. Error generico
+                        // Error. Firma no valida
+                        f_mostrar_capa_info(mensaje, 'error', 'block', codigoEncuesta);
+                    }
+                }
+
+                // Muestra resultados de los votos
+                f_mostrar_resultados(codigoEncuesta);
+            }
+        }, _urlVotacion, cadena_params);
+    }
+}
+
+// Funcion nueva para encuesta Si o No
+function f_enviar_votos_si_no(codigoEncuesta){
+    var encuesta_completa = f_esta_encuesta_completa_si_no(codigoEncuesta);
+    if (encuesta_completa == -1 || encuesta_completa == -2) {
+        switch(encuesta_completa){
+
+            case -1: f_pintar_mensaje_validacion_incompleta();
+                    break;
+            case -2: f_pintar_mensaje_validacion_numero_respuestas();
+                    break;
+        }
+
+    }
+    else {
+        f_limpiar_mensaje();
+        // Se envian los datos
+        document.getElementById('formulario_'+codigoEncuesta).submit();
+    }
+}
+
+function f_esta_encuesta_completa_si_no(codigoEncuesta){
+
+    var encuesta_completa = true;
+
+    // Se obtiene el campo de datos de la firma que contiene la informacion de la encuesta
+    var campo_firma = document.getElementById('firma_encuesta_'+codigoEncuesta);
+    var valor_firma = campo_firma.value;
+
+    // Se obtienen cada uno de los datos de la firma
+    var datos_firma = valor_firma.split('#');
+    var numero_campos = datos_firma.length;
+
+    // Se obtiene el campo de las preguntas de la encuesta
+    var cadena_preguntas = datos_firma[2];
+
+    // Se obtiene cada una de las preguntas
+    var lista_preguntas = cadena_preguntas.split(':');
+    var numero_preguntas = lista_preguntas.length;
+
+
+    for (var i = 0; i < numero_preguntas; i++) {
+
+        var pregunta = lista_preguntas[i];
+
+
+        if (pregunta != '') {
+            var datos_pregunta = pregunta.split('|');
+
+            // Se obtienen los datos de esa pregunta
+            var numero_pregunta   = datos_pregunta[0];
+            var tipo_pregunta     = datos_pregunta[1];
+            var numero_respuestas = datos_pregunta[2];
+            if(!document.getElementById(numero_pregunta+"_oculto")){
+                var respuesta_completa = false;
+
+                respuesta_completa = f_comprobar_respuesta_campo_radio_si_no(numero_pregunta, numero_respuestas, codigoEncuesta);
+
+                if (respuesta_completa == false) {
+                    return encuesta_completa = -1;
+                }
+            }
+        }
+    }
+
+    // Se devuelve el resultado
+    return encuesta_completa;
+}
+
+function f_comprobar_respuesta_campo_radio_si_no(idPregunta, numero_respuestas, codigoEncuesta) {
+
+    var campo_seleccionado = false;
+
+    // Se recorren todas las respuestas para ver si hay alguna seleccionada
+    for (i = 1; i <= numero_respuestas; i++) {
+        if(!document.getElementById(idPregunta+"_"+i+"_oculto")){
+            // Se compone el nombre del campo
+            var nombre_campo_si = 'radio_respuesta_' + idPregunta + '_' + i + '_' + codigoEncuesta+'_si';
+            // Se compone el nombre del campo
+            var nombre_campo_no = 'radio_respuesta_' + idPregunta + '_' + i + '_' + codigoEncuesta+'_no';
+
+            // Se obtiene el campo
+            var campo_si = document.getElementById(nombre_campo_si);
+            // Se obtiene el campo
+            var campo_no = document.getElementById(nombre_campo_no);
+
+
+            if (campo_si.checked == true || campo_no.checked == true) {
+                campo_seleccionado = true;
+            }else{
+                return campo_seleccionado = false;
+            }
+        }else{
+            campo_seleccionado = true;
+        }
+
+    }
+
+    // Se devuelve el resultado
+    return campo_seleccionado;
+}
+
+function f_enviar_votos(codigoEncuesta) {
+    f_votar_encuesta(codigoEncuesta);
+}
+
+function f_votar_encuesta(codigoEncuesta) {
+    //location.href='/encuestas/votarEncuesta.php?&codigo_encuesta=' + idEncuesta;
+    var encuesta_completa = f_esta_encuesta_completa(codigoEncuesta);
+    if (encuesta_completa == -1 || encuesta_completa == -2) {
+//        var capa_error_votacion = document.getElementById('capa_error_votacion');
+//        capa_error_votacion.style.display = 'block';
+        switch(encuesta_completa){
+
+            case -1: f_pintar_mensaje_validacion_incompleta();
+                    break;
+            case -2: f_pintar_mensaje_validacion_numero_respuestas();
+                    break;
+        }
+    }
+    else {
+        f_limpiar_mensaje();
+        // Se envian los datos
+       document.getElementById('formulario_'+codigoEncuesta).submit();
+    }
+}
+
+
+function f_procesar_voto(codigoEncuesta) {
+
+    var iframe_votar = document.getElementById('iframe_votar_'+codigoEncuesta);
+    if (iframe_votar.contentDocument) {
+        var d = iframe_votar.contentDocument;
+    } else if (iframe_votar.contentWindow) {
+        var d = iframe_votar.contentWindow.document;
+    } else {
+        var d = window.frames['iframe_votar_'+codigoEncuesta].document;
+    }
+    if (d.location.href == "about:blank") {
+        return true;
+    }
+
+    if (d == null) {
+        return true;
+    }
+
+    var cuerpo = d.body;
+    ///var cuerpo = d.documentElement;
+    var html_cuerpo = cuerpo.innerHTML;
+    if (html_cuerpo == '') {
+      html_cuerpo = '{}';
+    }
+    //else {
+    //  alert(html_cuerpo);
+    //}
+
+    // Se evalua el "json" devuelto
+    eval("_hashResultado = " + html_cuerpo);
+    var codigo_error = _hashResultado.codigo_error;
+    var mensaje = '<p><strong>Se ha producido un error en el registro de tu voto.</strong> Por favor, int&eacute;ntalo de nuevo m&aacute;s tarde</p>';
+    if ( (codigo_error == 1) || (codigo_error == -4) ) {
+        // Todo OK o voto ya repetido
+//        mensaje = '<p><strong>Gracias por participar.</strong> Tu voto se ha registrado correctamente</p>';
+//        f_mostrar_capa_info(mensaje, 'ok', 'block', codigoEncuesta);
+        f_pintar_mensaje_votacion_correcta();
+
+    }
+    else {
+        if (codigo_error == -2) {
+            // Error. Encuesta cerrada
+            mensaje = '<p>Por motivos informativos la encuesta ya est&aacute; cerrada al voto</p>';
+            f_mostrar_capa_info(mensaje, 'cerrado', 'block', codigoEncuesta);
+        }
+        else {
+            // Otro. Error generico
+            // Error. Firma no valida
+            f_mostrar_capa_info(mensaje, 'error', 'block', codigoEncuesta);
+        }
+    }
+
+    // Muestra resultados de los votos
+    f_mostrar_resultados(codigoEncuesta);
+
+    //
+    // VOTO CORRECTO
+    //
+    return true;
+}
+
+
+
+
+
+
+
+
+function f_ver_pagina_resultados(urlEncuesta) {
+    //location.href='/encuestas/verResultados.php?codigo_encuesta=' + codigoEncuesta;
+    location.href=urlEncuesta;
+}
+
+
+
+//
+// Para comprobar los campos de la encuesta
+//
+function f_esta_encuesta_completa(codigoEncuesta) {
+
+    var encuesta_completa = true;
+
+    // Se obtiene el campo de datos de la firma que contiene la informacion de la encuesta
+    var campo_firma = document.getElementById('firma_encuesta_'+codigoEncuesta);
+    var valor_firma = campo_firma.value;
+    if(document.getElementById('numero_respuestas_minima'))
+        var numero_respuestas_minima = document.getElementById('numero_respuestas_minima').value;
+    else
+        var numero_respuestas_minima = 0;
+    if(document.getElementById('numero_respuestas_maxima'))
+        var numero_respuestas_maxima = document.getElementById('numero_respuestas_maxima').value;
+    else
+        var numero_respuestas_maxima = 0;
+
+    if(document.getElementById('numero_resultados_mostrar'))
+        var numero_resultados_mostrar = document.getElementById('numero_resultados_mostrar').value;
+    else
+        var numero_resultados_mostrar = 0;
+
+    // Se obtienen cada uno de los datos de la firma
+    var datos_firma = valor_firma.split('#');
+    var numero_campos = datos_firma.length;
+
+    // Se obtiene el campo de las preguntas de la encuesta
+    var cadena_preguntas = datos_firma[2];
+
+    // Se obtiene cada una de las preguntas
+    var lista_preguntas = cadena_preguntas.split(':');
+    var numero_preguntas = lista_preguntas.length;
+    var total_respuestas = 0;
+    for (var i = 0; i < numero_preguntas; i++) {
+
+        // Se obtiene una pregunta de la lista
+        var pregunta = lista_preguntas[i];
+
+        if (pregunta != '') {
+            var datos_pregunta = pregunta.split('|');
+
+            // Se obtienen los datos de esa pregunta
+            var numero_pregunta   = datos_pregunta[0];
+            var tipo_pregunta     = datos_pregunta[1];
+            var numero_respuestas = datos_pregunta[2];
+
+            var respuesta_completa = false;
+
+            if(!document.getElementById(numero_pregunta+"_oculto")){
+                // Campo radio button
+                if (tipo_pregunta == 1) {
+                    respuesta_completa = f_comprobar_respuesta_campo_radio(numero_pregunta, numero_respuestas, codigoEncuesta);
+                    if(respuesta_completa != false){
+                        total_respuestas ++;
+                    }
+                }
+
+
+                // Campo checkbox
+                if (tipo_pregunta == 2) {
+                    respuesta_completa = f_comprobar_respuesta_campo_check(numero_pregunta, numero_respuestas, codigoEncuesta);
+                    if(respuesta_completa != false){
+                        total_respuestas += respuesta_completa;
+                    }
+
+                }
+
+                // Campo radio button video
+                if (tipo_pregunta == 3) {
+                    respuesta_completa = f_comprobar_respuesta_campo_radio(numero_pregunta, numero_respuestas, codigoEncuesta);
+                    if(respuesta_completa != false){
+                        total_respuestas ++;
+                    }
+                }
+
+                // Campo checkbox video
+
+                if (tipo_pregunta == 4) {
+                    respuesta_completa = f_comprobar_respuesta_campo_check(numero_pregunta, numero_respuestas, codigoEncuesta);
+                    if(respuesta_completa != false){
+                        total_respuestas += respuesta_completa;
+                    }
+                }
+
+                if (respuesta_completa == false) {
+                    return encuesta_completa = -1;
+                }
+            }
+        }
+
+    }
+
+
+    if(numero_respuestas_minima == false && numero_respuestas_maxima == false){
+        return encuesta_completa;
+    }else{
+        if(numero_respuestas_minima>total_respuestas || numero_respuestas_maxima<total_respuestas){
+
+            return encuesta_completa = -2;
+        }
+    }
+
+    // Se devuelve el resultado
+    return encuesta_completa;
+}
+
+
+function f_comprobar_respuesta_campo_radio(idPregunta, numero_respuestas, codigoEncuesta) {
+
+    var campo_seleccionado = false;
+
+    // Se recorren todas las respuestas para ver si hay alguna seleccionada
+    for (i = 1; i <= numero_respuestas; i++) {
+
+        // Se compone el nombre del campo
+        var nombre_campo = 'radio_respuesta_' + idPregunta + '_' + i + '_' + codigoEncuesta;
+
+        // Se obtiene el campo
+        var campo = document.getElementById(nombre_campo);
+        if (campo.checked == true) {
+            campo_seleccionado = true;
+        }
+    }
+
+    // Se devuelve el resultado
+    return campo_seleccionado;
+}
+
+function f_comprobar_respuesta_campo_check(idPregunta, numero_respuestas, codigoEncuesta) {
+
+    var campo_seleccionado = false;
+    var ilimitado = false;
+    if(document.getElementById('respuestas_minima_'+idPregunta))
+        var respuestas_minima = document.getElementById('respuestas_minima_'+idPregunta).value;
+    else
+        var respuestas_minima = 0;
+    if(document.getElementById('respuestas_maxima_'+idPregunta))
+        var respuestas_maxima = document.getElementById('respuestas_maxima_'+idPregunta).value;
+    else
+        var respuestas_maxima = 0;
+
+    if(respuestas_minima == 0 && respuestas_maxima == 0){
+        ilimitado = true;
+    }
+    var contador = 0;
+    // Se recorren todas las respuestas para ver si hay alguna seleccionada
+    for (i = 1; i <= numero_respuestas; i++) {
+
+        // Se compone el nombre del campo
+        var nombre_campo = 'check_respuesta_' + idPregunta + '_' + i + '_' + codigoEncuesta;
+
+        // Se obtiene el campo
+        var campo = document.getElementById(nombre_campo);
+        if (campo.checked == true) {
+            contador++;
+        }
+    }
+
+    if(ilimitado == false){
+        if(contador>=respuestas_minima && contador<=respuestas_maxima){
+            return contador;
+        }else{
+            return false;
+        }
+    }else{
+        if(contador == 0){
+            return false;
+        }else{
+            return contador;
+        }
+    }
+
+
+}
+
+function f_comprobar_respuesta_campo_texto(idPregunta, numero_respuestas, codigoEncuesta) {
+
+    var campo_seleccionado = false;
+
+    // Se recorren todas las respuestas para ver si hay alguna seleccionada
+    for (i = 1; i <= numero_respuestas; i++) {
+
+        // Se compone el nombre del campo
+        var nombre_campo = 'text_respuesta_' + idPregunta + '_' + i + '_' + codigoEncuesta;
+
+        // Se obtiene el campo
+        var campo = document.getElementById(nombre_campo);
+        if (campo.value != '') {
+            campo_seleccionado = true;
+        }
+    }
+
+    // Se devuelve el resultado
+    return campo_seleccionado;
+}
+
+function f_pintar_mensaje_votacion_correcta() {
+    f_limpiar_mensaje();
+    $('#resultados-wp').prepend('<h2 id="ms-alert" class="ms-ok"><span class="icon ico-ok s-left"></span><strong>Gracias por participar.</strong> Tu voto se ha registrado correctamente.</h2>');
+    //document.location.href = "#resultados-wp";
+    $('body, html').stop(true,true).animate({scrollTop: $('#resultados-wp').offset().top},1000);
+}
+
+function f_pintar_mensaje_validacion_incompleta() {
+    f_limpiar_mensaje();
+    $('#votacion-wp').prepend('<h2 id="ms-alert" class="ms-ko"><span class="icon ico-ko s-left"></span><strong>Aviso.</strong> Debes completar la encuesta correctamente para poder enviar tu votación.</h2>');
+    //document.location.href = "#votacion-wp";
+    $('body, html').stop(true,true).animate({scrollTop: $('#votacion-wp').offset().top},1000);
+}
+
+function f_pintar_mensaje_validacion_numero_respuestas() {
+    f_limpiar_mensaje();
+    $('#votacion-wp').prepend('<h2 id="ms-alert" class="ms-ko"><span class="icon ico-ko s-left"></span><strong>Aviso.</strong> El numero de respuestas es incorrecta, debes completar la encuesta correctamente para poder enviar tu votación.</h2>');
+    //document.location.href = "#votacion-wp";
+    $('body, html').stop(true,true).animate({scrollTop: $('#votacion-wp').offset().top},1000);
+}
+
+function f_limpiar_mensaje() {
+    $('#ms-alert').remove();
+}
