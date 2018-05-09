@@ -17,24 +17,27 @@ import javax.swing.table.DefaultTableModel;
 import com.inventario.controlador.ControladorInventario;
 import com.inventario.enums.TipoTablaEnum;
 import com.inventario.esquema.Categoria;
-import com.inventario.esquema.Inventario;
 import com.inventario.esquema.Marca;
 import com.inventario.esquema.Origen;
 import com.inventario.esquema.Tamanio;
 import com.inventario.esquema.TipoProducto;
-import com.inventario.negocio.NegocioInventario;
 import com.inventario.utilidades.ConstantesInterfaz;
 
 public class DialogVisualizarParametros extends JDialog{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private ControladorInventario controladorInventario;
 	private JLabel lblParametros;
 	private JComboBox<TipoTablaEnum> boxParametros;
 
 	private JButton btnMostrar;
+	private BotonEditarMarca btnEditarMarca;
 	private JTable jtTable;
 	private DefaultTableModel dtm ;
-	private NegocioInventario negocioInventario; 
+	
 	public DialogVisualizarParametros(ControladorInventario controladorInventario) {
 		setSize(600, 400);
 		setResizable(Boolean.FALSE);
@@ -42,7 +45,6 @@ public class DialogVisualizarParametros extends JDialog{
 		setTitle("Mostrar parámetros");
 		setLocationRelativeTo(null);
 		this.controladorInventario = controladorInventario;
-		this.negocioInventario = this.controladorInventario.getNi();
 		createJtable();
 		setColumnJtable();
 		inicializarComponentes();
@@ -84,12 +86,12 @@ public class DialogVisualizarParametros extends JDialog{
 	}
 
 	public void addValueJTable(Marca marca) {	
-		clearTable();
 		dtm.setRowCount(dtm.getRowCount() + 1);		
 		dtm.setValueAt(marca.getIdMarca(), dtm.getRowCount() - 1, 0);
-		dtm.setValueAt(marca.getNombre().getValorCampo(), dtm.getRowCount() - 1, 1);		
-		jtTable.getColumn("Editar").setCellEditor(new BotonEditarMarca(new JCheckBox(),controladorInventario));
-		//jtTable.getColumn("Eliminar").setCellEditor(new BotonEliminarInventario(new JCheckBox(),controladorInventario));
+		dtm.setValueAt(marca.getNombre().getValorCampo(), dtm.getRowCount() - 1, 1);	
+		btnEditarMarca=new BotonEditarMarca(new JCheckBox(),controladorInventario);
+		jtTable.getColumn("Editar").setCellEditor(btnEditarMarca);
+		jtTable.repaint();
 	}
 
 	public void setColumnJtable() {
@@ -97,7 +99,6 @@ public class DialogVisualizarParametros extends JDialog{
 		dtm.addColumn("Identificador");
 		dtm.addColumn("Nombre");
 		dtm.addColumn("Editar");
-//		dtm.addColumn("Eliminar");
 	}
 
 	public void adicionarMarca(List<Marca> marcas) {
@@ -105,18 +106,14 @@ public class DialogVisualizarParametros extends JDialog{
 		for (int i = 0; i < marcas.size(); i++) {
 			addValueJTable(marcas.get(i));
 		}
-		this.repaint();
-
-
 	}
+	
 	public void addValueJTable(Categoria categoria) {	
-		clearTable();
 		dtm.setRowCount(dtm.getRowCount() + 1);		
 		dtm.setValueAt(categoria.getIdCategoria(), dtm.getRowCount() - 1, 0);
 		dtm.setValueAt(categoria.getNombre().getValorCampo(), dtm.getRowCount() - 1, 1);		
 		jtTable.getColumn("Editar").setCellEditor(new BotonEditarCategoria(new JCheckBox(),controladorInventario));
-//		jtTable.getColumn("Eliminar").setCellEditor(new BotonEliminarInventario(new JCheckBox(),controladorInventario));
-
+		jtTable.repaint();
 	}
 	public void adicionarCategoria(List<Categoria> categorias) {
 		clearTable();
@@ -127,13 +124,11 @@ public class DialogVisualizarParametros extends JDialog{
 	}
 	
 	public void addValueJTable(Tamanio tamanio) {	
-		clearTable();
 		dtm.setRowCount(dtm.getRowCount() + 1);		
 		dtm.setValueAt(tamanio.getIdTamanio(), dtm.getRowCount() - 1, 0);
 		dtm.setValueAt(tamanio.getNombre().getValorCampo(), dtm.getRowCount() - 1, 1);		
 		jtTable.getColumn("Editar").setCellEditor(new BotonEditarTamanio(new JCheckBox(),controladorInventario));
-//		jtTable.getColumn("Eliminar").setCellEditor(new BotonEliminarTamanio(new JCheckBox(),controladorInventario));
-
+		jtTable.repaint();
 	}
 	public void adicionarTamanio(List<Tamanio> tamanios) {
 		clearTable();
@@ -144,13 +139,11 @@ public class DialogVisualizarParametros extends JDialog{
 	}
 	
 	public void addValueJTable(Origen origen) {	
-		clearTable();
 		dtm.setRowCount(dtm.getRowCount() + 1);		
 		dtm.setValueAt(origen.getIdOrigen(), dtm.getRowCount() - 1, 0);
 		dtm.setValueAt(origen.getNombre().getValorCampo(), dtm.getRowCount() - 1, 1);		
 		jtTable.getColumn("Editar").setCellEditor(new BotonEditarOrigen(new JCheckBox(),controladorInventario));
-		//jtTable.getColumn("Eliminar").setCellEditor(new BotonEliminarInventario(new JCheckBox(),controladorInventario));
-
+		jtTable.repaint();
 	}
 	public void adicionarOrigen(List<Origen> origen) {
 		clearTable();
@@ -161,16 +154,13 @@ public class DialogVisualizarParametros extends JDialog{
 	}
 	
 	public void addValueJTable(TipoProducto tipo) {	
-		clearTable();
 		dtm.setRowCount(dtm.getRowCount() + 1);		
 		dtm.setValueAt(tipo.getIdTipo(), dtm.getRowCount() - 1, 0);
 		dtm.setValueAt(tipo.getNombre().getValorCampo(), dtm.getRowCount() - 1, 1);		
 		jtTable.getColumn("Editar").setCellEditor(new BotonEditarTipo(new JCheckBox(),controladorInventario));
-//		jtTable.getColumn("Eliminar").setCellEditor(new BotonEliminarInventario(new JCheckBox(),controladorInventario));
-
+		jtTable.repaint();
 	}
 	public void adicionarTipo(List<TipoProducto> tipo) {
-		clearTable();
 		for (int i = 0; i < tipo.size(); i++) {
 			addValueJTable(tipo.get(i));
 		}
@@ -181,6 +171,7 @@ public class DialogVisualizarParametros extends JDialog{
 		int aux=dtm.getRowCount();
 		for(int i=0; i<aux;i++){
 			dtm.removeRow(0);
+			jtTable.repaint();
 		}
 	}
 
@@ -190,6 +181,14 @@ public class DialogVisualizarParametros extends JDialog{
 
 	public void setBoxParametros(JComboBox<TipoTablaEnum> boxParametros) {
 		this.boxParametros = boxParametros;
+	}
+
+	public BotonEditarMarca getBtnEditarMarca() {
+		return btnEditarMarca;
+	}
+
+	public void setBtnEditarMarca(BotonEditarMarca btnEditarMarca) {
+		this.btnEditarMarca = btnEditarMarca;
 	}
 	
 }

@@ -2,10 +2,13 @@ package com.inventario.controlador;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.math.BigDecimal;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Properties;
 
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 import com.inventario.enums.GeneroEnum;
@@ -28,17 +31,16 @@ import com.inventario.interfaz.DialogCrearInventario;
 import com.inventario.interfaz.DialogCrearObjeto;
 import com.inventario.interfaz.DialogCrearUsuario;
 import com.inventario.interfaz.DialogEditarParametros;
-import com.inventario.interfaz.DialogVisualizarParametros;
 import com.inventario.interfaz.DialogEditarProducto;
 import com.inventario.interfaz.DialogInsertarProducto;
 import com.inventario.interfaz.DialogMostrarInventarios;
 import com.inventario.interfaz.DialogMostrarProductos;
+import com.inventario.interfaz.DialogVisualizarParametros;
+import com.inventario.manejo.documento.ManejadorPdf;
 import com.inventario.negocio.NegocioInventario;
 import com.inventario.negocio.SeguridadInventario;
 import com.inventario.utilidades.ConstantesInterfaz;
 import com.inventario.utilidades.Utilidades;
-
-import javafx.scene.control.TabPane.TabClosingPolicy;
 
 public class ControladorInventario implements ActionListener {
 	private NegocioInventario ni;
@@ -74,13 +76,14 @@ public class ControladorInventario implements ActionListener {
 	private Boolean isAgregarProductos;
 	private String inventario;
 	private int parametrización;
+	private Inventario inventarioActual;
 	SeguridadInventario s;
 
 	public ControladorInventario() {
 		ni = new NegocioInventario();
 		codigosProductos = new ArrayList<Producto>();
 		isAgregarProductos = Boolean.FALSE;
-		parametrización=0;
+		parametrización = 0;
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -104,10 +107,10 @@ public class ControladorInventario implements ActionListener {
 						Origen origen = ((Origen) insertarProducto.getBoxOrigen().getSelectedItem());
 						GeneroEnum genero = (GeneroEnum) insertarProducto.getBoxGenero().getSelectedItem();
 						String precioCompra = insertarProducto.getTxtPrecio().getText();
-						String cantidad =insertarProducto.getTxtCantidad().getText();
+						String cantidad = insertarProducto.getTxtCantidad().getText();
 						String precioVenta = insertarProducto.getTxtPrecioVenta().getText();
-						Producto producto = new Producto(insertarProducto.getTxtNombre().getText(), categoria,
-								genero, tipo, marca, precioCompra, tamanio, origen, cantidad, precioVenta);
+						Producto producto = new Producto(insertarProducto.getTxtNombre().getText(), categoria, genero,
+								tipo, marca, precioCompra, tamanio, origen, cantidad, precioVenta);
 						ni.crearProducto(producto);
 						insertarProducto.getTxtCantidad().setText("");
 						insertarProducto.getTxtNombre().setText("");
@@ -140,14 +143,7 @@ public class ControladorInventario implements ActionListener {
 				dialogMostrarProductos = new DialogMostrarProductos(this);
 				dialogMostrarProductos.setVisible(Boolean.TRUE);
 			} else if (e.getActionCommand().equals(ConstantesInterfaz.FILTRAR_PRODUCTO)) {
-				Categoria categoria = ((Categoria) dialogMostrarProductos.getBoxCategoria().getSelectedItem());
-				Marca marca = ((Marca) dialogMostrarProductos.getBoxMarca().getSelectedItem());
-				TipoProducto tipo = ((TipoProducto) dialogMostrarProductos.getBoxTipo().getSelectedItem());
-				Tamanio tamanio = ((Tamanio) dialogMostrarProductos.getBoxTamanio().getSelectedItem());
-				Origen origen = ((Origen) dialogMostrarProductos.getBoxOrigen().getSelectedItem());
-				GeneroEnum genero = (GeneroEnum)  dialogMostrarProductos.getBoxGenero().getSelectedItem();
-				Producto producto = new Producto(categoria, genero, tipo, marca, tamanio, origen);
-				dialogMostrarProductos.adicionarProducto(ni.consultarProducto(producto));
+				consultarProducto();
 			} else if (e.getActionCommand().equals(ConstantesInterfaz.CREAR_INVENTARIO)) {
 				dialogCrearInventario = new DialogCrearInventario(this);
 				dialogCrearInventario.setVisible(Boolean.TRUE);
@@ -183,6 +179,11 @@ public class ControladorInventario implements ActionListener {
 					String precioCompra = dialogEditarProducto.getTxtPrecio().getText();
 					producto.setPrecioCompra(precioCompra);
 				}
+				if (dialogEditarProducto.getTxtNombre().getText() != null
+						&& !dialogEditarProducto.getTxtNombre().getText().trim().equals("")) {
+					String nombre = dialogEditarProducto.getTxtNombre().getText();
+					producto.setNombreProducto(nombre);
+				}
 				if (dialogEditarProducto.getTxtPrecioVenta().getText() != null
 						&& !dialogEditarProducto.getTxtPrecioVenta().getText().trim().equals("")) {
 					String precioVenta = dialogEditarProducto.getTxtPrecioVenta().getText();
@@ -195,108 +196,90 @@ public class ControladorInventario implements ActionListener {
 				}
 				ni.editarProducto(producto);
 				dialogEditarProducto.dispose();
-				dialogMostrarProductos.repaint();
+				consultarProducto();
 			} else if (e.getActionCommand().equals(ConstantesInterfaz.ABRIR_VENTANA_EDITAR)) {
 				System.out.println("editar productosS");
 				Producto producto = ni.consultarProducto(idProductoEditar);
 				dialogEditarProducto = new DialogEditarProducto(this, producto);
 				dialogEditarProducto.setVisible(Boolean.TRUE);
 
-			}else if (e.getActionCommand().equals(ConstantesInterfaz.ABRIR_EDITAR_MARCA)) {
-
-				Marca marca= (Marca)ni.consultarParametro(TipoTablaEnum.MARCA, idMarcaEditar);
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.ABRIR_EDITAR_MARCA)) {
+				Marca marca = (Marca) ni.consultarParametro(TipoTablaEnum.MARCA, idMarcaEditar);
 				dialogEditarParametros = new DialogEditarParametros(this, marca);
 				dialogEditarParametros.setVisible(Boolean.TRUE);
-				parametrización=1;
+				parametrización = 1;
 
-			}else if (e.getActionCommand().equals(ConstantesInterfaz.ABRIR_EDITAR_CATEGORIA)) {
-				Categoria categoria=(Categoria)ni.consultarParametro(TipoTablaEnum.CATEGORIA, idCategoriaEditar);
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.ABRIR_EDITAR_CATEGORIA)) {
+				Categoria categoria = (Categoria) ni.consultarParametro(TipoTablaEnum.CATEGORIA, idCategoriaEditar);
 				dialogEditarParametros = new DialogEditarParametros(this, categoria);
 				System.out.println(categoria.getNombre().getValorCampo());
 				dialogEditarParametros.setVisible(Boolean.TRUE);
-			}else if (e.getActionCommand().equals(ConstantesInterfaz.ABRIR_EDITAR_TIPO)) {
-				TipoProducto tipo=(TipoProducto)ni.consultarParametro(TipoTablaEnum.TIPO, idTipoEditar);
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.ABRIR_EDITAR_TIPO)) {
+				TipoProducto tipo = (TipoProducto) ni.consultarParametro(TipoTablaEnum.TIPO, idTipoEditar);
 				dialogEditarParametros = new DialogEditarParametros(this, tipo);
 				dialogEditarParametros.setVisible(Boolean.TRUE);
-			}else if (e.getActionCommand().equals(ConstantesInterfaz.ABRIR_EDITAR_ORIGEN)) {
-				Origen origen=(Origen)ni.consultarParametro(TipoTablaEnum.ORIGEN, idOrigenEditar); 
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.ABRIR_EDITAR_ORIGEN)) {
+				Origen origen = (Origen) ni.consultarParametro(TipoTablaEnum.ORIGEN, idOrigenEditar);
 				dialogEditarParametros = new DialogEditarParametros(this, origen);
 				dialogEditarParametros.setVisible(Boolean.TRUE);
-			}else if (e.getActionCommand().equals(ConstantesInterfaz.ABRIR_EDITAR_TAMANIO)) {
-				Tamanio tamanio=(Tamanio)ni.consultarParametro(TipoTablaEnum.TAMANIO, idTamanioEditar); 
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.ABRIR_EDITAR_TAMANIO)) {
+				Tamanio tamanio = (Tamanio) ni.consultarParametro(TipoTablaEnum.TAMANIO, idTamanioEditar);
 				dialogEditarParametros = new DialogEditarParametros(this, tamanio);
 				dialogEditarParametros.setVisible(Boolean.TRUE);
-			}else if (e.getActionCommand().equals(ConstantesInterfaz.EDITAR_CATEGORIA)) {
-				ArrayList<Categoria> categorias= new ArrayList<>();
-				Categoria categoria=dialogEditarParametros.getCategoria();
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.EDITAR_CATEGORIA)) {
+				Categoria categoria = dialogEditarParametros.getCategoria();
 				categoria.setNombre(dialogEditarParametros.getTxtNombre().getText());
 				ni.editarCategoria(categoria);
 				dialogEditarParametros.dispose();
-				for (int i = 0; i < ni.listarObjetos(TipoTablaEnum.CATEGORIA).size(); i++) {
-					Categoria categoria1=(Categoria)ni.listarObjetos(TipoTablaEnum.CATEGORIA).get(i);
-					categorias.add(categoria1);
-				}
+				List<Categoria> categorias = (List)ni.listarObjetos(TipoTablaEnum.CATEGORIA);
 				dialogVisualizarParametros.adicionarCategoria(categorias);
-			}else if (e.getActionCommand().equals(ConstantesInterfaz.EDITAR_TAMANIO)) {
-				ArrayList<Tamanio> tamanios= new ArrayList<>();
-				Tamanio tamanio=dialogEditarParametros.getTamanio();
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.EDITAR_TAMANIO)) {
+				Tamanio tamanio = dialogEditarParametros.getTamanio();
 				tamanio.setNombre(dialogEditarParametros.getTxtNombre().getText());
 				ni.editarTamanio(tamanio);
 				dialogEditarParametros.dispose();
-				for (int i = 0; i < ni.listarObjetos(TipoTablaEnum.TAMANIO).size(); i++) {
-					Tamanio tamanio1=(Tamanio)ni.listarObjetos(TipoTablaEnum.TAMANIO).get(i);
-					tamanios.add(tamanio1);
-				}
+				List<Tamanio> tamanios = (List)ni.listarObjetos(TipoTablaEnum.TAMANIO);
 				dialogVisualizarParametros.adicionarTamanio(tamanios);
-			}else if (e.getActionCommand().equals(ConstantesInterfaz.EDITAR_ORIGEN)) {
-				ArrayList<Origen> origenes= new ArrayList<>();
-				Origen origen=dialogEditarParametros.getOrigen();
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.EDITAR_ORIGEN)) {
+				Origen origen = dialogEditarParametros.getOrigen();
 				origen.setNombre(dialogEditarParametros.getTxtNombre().getText());
 				ni.editarOrigen(origen);
 				dialogEditarParametros.dispose();
-				for (int i = 0; i < ni.listarObjetos(TipoTablaEnum.ORIGEN).size(); i++) {
-					Origen origen1=(Origen)ni.listarObjetos(TipoTablaEnum.ORIGEN).get(i);
-					origenes.add(origen1);
-				}
+				List<Origen> origenes = (List)ni.listarObjetos(TipoTablaEnum.ORIGEN);
 				dialogVisualizarParametros.adicionarOrigen(origenes);
-			}else if (e.getActionCommand().equals(ConstantesInterfaz.EDITAR_MARCA)) {
-				ArrayList<Marca> marcas= new ArrayList<>();
-				Marca marca=dialogEditarParametros.getMarca();
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.EDITAR_MARCA)) {
+				Marca marca = dialogEditarParametros.getMarca();
 				marca.setNombre(dialogEditarParametros.getTxtNombre().getText());
 				ni.editarMarca(marca);
 				dialogEditarParametros.dispose();
-				for (int i = 0; i < ni.listarObjetos(TipoTablaEnum.MARCA).size(); i++) {
-					Marca marca1=(Marca)ni.listarObjetos(TipoTablaEnum.MARCA).get(i);
-					marcas.add(marca1);
-				}dialogVisualizarParametros.adicionarMarca(marcas);
-			}else if (e.getActionCommand().equals(ConstantesInterfaz.EDITAR_TIPO)) {
-				ArrayList<TipoProducto> tipos= new ArrayList<>();
-				TipoProducto tipo=dialogEditarParametros.getTipo();
+				List<Marca> marcas = (List)ni.listarObjetos(TipoTablaEnum.MARCA);
+				dialogVisualizarParametros.adicionarMarca(marcas);
+				dialogVisualizarParametros.getBtnEditarMarca().stopCellEditing();
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.EDITAR_TIPO)) {
+				TipoProducto tipo = dialogEditarParametros.getTipo();
 				tipo.setNombre(dialogEditarParametros.getTxtNombre().getText());
 				ni.editarTipo(tipo);
 				dialogEditarParametros.dispose();
-				for (int i = 0; i < ni.listarObjetos(TipoTablaEnum.TIPO).size(); i++) {
-					TipoProducto tipo1=(TipoProducto)ni.listarObjetos(TipoTablaEnum.TIPO).get(i);
-					tipos.add(tipo1);
-				}
+				List<TipoProducto> tipos = (List)ni.listarObjetos(TipoTablaEnum.TIPO);
 				dialogVisualizarParametros.adicionarTipo(tipos);
-			}else if (e.getActionCommand().equals(ConstantesInterfaz.ELIMINAR_PRODUCTO)) {
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.ELIMINAR_PRODUCTO)) {
 				int result = JOptionPane.showConfirmDialog(null, "Realmente desea eliminar este producto?",
 						ConstantesInterfaz.CONFIRMAR_ELIMINAR_PRODUCTO, JOptionPane.YES_NO_OPTION,
 						JOptionPane.QUESTION_MESSAGE);
 				if (result == JOptionPane.YES_OPTION) {
 					ni.eliminarProducto(idProductoEliminar);
+					consultarProducto();
 				}
 
-			}else if (e.getActionCommand().equals(ConstantesInterfaz.ELIMINAR_TAMANIO)) {
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.ELIMINAR_TAMANIO)) {
 				int result = JOptionPane.showConfirmDialog(null, "Realmente desea eliminar este Tamaño?",
 						ConstantesInterfaz.CONFIRMAR_ELIMINAR_TAMANIO, JOptionPane.YES_NO_OPTION,
 						JOptionPane.QUESTION_MESSAGE);
 				if (result == JOptionPane.YES_OPTION) {
-					ni.eliminarObjeto(TipoTablaEnum.TAMANIO,idTamanioEliminar);
+					ni.eliminarObjeto(TipoTablaEnum.TAMANIO, idTamanioEliminar);
 				}
 
-			}  else if (e.getActionCommand().equals(ConstantesInterfaz.AGREGAR_PRODUCTOS)) {
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.AGREGAR_PRODUCTOS)) {
 
 				dialogAgregarProductos = new DialogAgregarProductos(this);
 				dialogAgregarProductos.setVisible(Boolean.TRUE);
@@ -335,7 +318,8 @@ public class ControladorInventario implements ActionListener {
 					if (filaSeleccionada == -1) {
 						JOptionPane.showMessageDialog(null, "No ha seleccionado ninguna fila.");
 					} else {
-						Integer cantidad = new Integer(dialogAgregarProductos.extraerDatos().getCantidad().getValorCampo());
+						Integer cantidad = new Integer(
+								dialogAgregarProductos.extraerDatos().getCantidad().getValorCampo());
 						Integer idProducto = dialogAgregarProductos.extraerDatos().getIdProducto();
 						Integer idInventario = idInventarioEditar;
 						InventarioPeriodico inventarioPeriodico = new InventarioPeriodico(cantidad,
@@ -360,12 +344,13 @@ public class ControladorInventario implements ActionListener {
 						.getSelectedItem();
 				Date fechaInventario = dialogCrearInventario.getCalendarFecha().getDate();
 				java.sql.Date fechaSql = new java.sql.Date(fechaInventario.getTime());
-				Inventario inventario = new Inventario(tipoInventario, fechaSql);
-				ni.crearInventario(inventario);
+				inventarioActual = new Inventario(tipoInventario, fechaSql);
+				ni.crearInventario(inventarioActual);
+				inventarioActual = ni.consultarInventario();
 				for (int i = 0; i < codigosProductos.size(); i++) {
-					Integer cantidad = (Integer) (dialogCrearInventario.getJtTable().getValueAt(i, 1));
+					Integer cantidad = new Integer((dialogCrearInventario.getJtTable().getValueAt(i, 1).toString()));
 					InventarioPeriodico inventarioPeriodico = new InventarioPeriodico(cantidad, codigosProductos.get(i),
-							ni.consultarInventario());
+							inventarioActual);
 					ni.crearInventarioPeriodico(inventarioPeriodico);
 				}
 			} else if (e.getActionCommand().equals(ConstantesInterfaz.CONSULTAR_INVENTARIO)) {
@@ -431,88 +416,89 @@ public class ControladorInventario implements ActionListener {
 				System.exit(0);
 			} else if (e.getActionCommand().equals(ConstantesInterfaz.CERRAR_INSERTAR_PRODUCTO)) {
 				insertarProducto.dispose();
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.CERRAR_FILTRO)) {
+				dialogMostrarProductos.dispose();
 			} else if (e.getActionCommand().equals(ConstantesInterfaz.SALIR_AGREGAR_PRO)) {
-				for (int i = 0; i < codigosProductos.size(); i++) {
-					codigosProductos.remove(i);
-				}
 				dialogAgregarProductos.dispose();
-			}else if (e.getActionCommand().equals(ConstantesInterfaz.CERRAR_EDITAR_PRODUCTO)) {
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.CERRAR_EDITAR_PRODUCTO)) {
 				dialogEditarProducto.dispose();
-			}else if (e.getActionCommand().equals(ConstantesInterfaz.CREAR_USUARIO)) {
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.CREAR_USUARIO)) {
 				if (dialogCrearUsuario.getTxtPrimerNombre().getText().length() == 0
-						||dialogCrearUsuario.getTxtPrimerApellido().getText().length() == 0
-						||dialogCrearUsuario.getTxtCargo().getText().length() == 0
-						||dialogCrearUsuario.getTxtCorreo().getText().length() == 0
-						||dialogCrearUsuario.getTxtIdentificacion().getText().length() == 0
-						||dialogCrearUsuario.getTxtUsuario().getText().length() == 0
-						||dialogCrearUsuario.getTxtContrasenia().getText().length() == 0) {
+						|| dialogCrearUsuario.getTxtPrimerApellido().getText().length() == 0
+						|| dialogCrearUsuario.getTxtCargo().getText().length() == 0
+						|| dialogCrearUsuario.getTxtCorreo().getText().length() == 0
+						|| dialogCrearUsuario.getTxtIdentificacion().getText().length() == 0
+						|| dialogCrearUsuario.getTxtUsuario().getText().length() == 0
+						|| dialogCrearUsuario.getTxtContrasenia().getText().length() == 0) {
 					JOptionPane.showMessageDialog(null, "No puede enviar campos vacíos");
-				}else{
-					String primerNombre=dialogCrearUsuario.getTxtPrimerNombre().getText();
-					String segundoNombre=dialogCrearUsuario.getTxtSegundoNombre().getText();
-					String primerApellido=dialogCrearUsuario.getTxtPrimerApellido().getText();
-					String segundoApellido=dialogCrearUsuario.getTxtSegundoApellido().getText();
-					String cargo=dialogCrearUsuario.getTxtCargo().getText();
-					String correo=dialogCrearUsuario.getTxtCorreo().getText();
-					String tipo=dialogCrearUsuario.getBoxTipoIdentificacion().getSelectedItem().toString();
-					String identificacion=dialogCrearUsuario.getTxtIdentificacion().getText();
-					String nombre=dialogCrearUsuario.getTxtUsuario().getText();
-					String contrasenia= dialogCrearUsuario.getTxtContrasenia().getText();
-					Perfil perfil= (Perfil)dialogCrearUsuario.getBoxPerfil().getSelectedItem();
-					Persona persona= new Persona(tipo, Integer.valueOf(identificacion), primerNombre, segundoNombre, primerApellido, segundoApellido, cargo, correo);
-					Usuario usuario= new Usuario(nombre, contrasenia, perfil, persona);
+				} else {
+					String primerNombre = dialogCrearUsuario.getTxtPrimerNombre().getText();
+					String segundoNombre = dialogCrearUsuario.getTxtSegundoNombre().getText();
+					String primerApellido = dialogCrearUsuario.getTxtPrimerApellido().getText();
+					String segundoApellido = dialogCrearUsuario.getTxtSegundoApellido().getText();
+					String cargo = dialogCrearUsuario.getTxtCargo().getText();
+					String correo = dialogCrearUsuario.getTxtCorreo().getText();
+					String tipo = dialogCrearUsuario.getBoxTipoIdentificacion().getSelectedItem().toString();
+					String identificacion = dialogCrearUsuario.getTxtIdentificacion().getText();
+					String nombre = dialogCrearUsuario.getTxtUsuario().getText();
+					String contrasenia = dialogCrearUsuario.getTxtContrasenia().getText();
+					Perfil perfil = (Perfil) dialogCrearUsuario.getBoxPerfil().getSelectedItem();
+					Persona persona = new Persona(tipo, Integer.valueOf(identificacion), primerNombre, segundoNombre,
+							primerApellido, segundoApellido, cargo, correo);
+					Usuario usuario = new Usuario(nombre, contrasenia, perfil, persona);
 					s.crearPersona(persona);
 					s.crearUsuario(usuario);
 				}
-			}
-			else if (e.getActionCommand().equals(ConstantesInterfaz.DIALOG_CREAR_USUARIO)) {
-				dialogCrearUsuario= new DialogCrearUsuario(this);
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.DIALOG_CREAR_USUARIO)) {
+				dialogCrearUsuario = new DialogCrearUsuario(this);
 				dialogCrearUsuario.setVisible(true);
-			}
-			else if (e.getActionCommand().equals(ConstantesInterfaz.DIALOG_EDITAR_PARAMETROS)) {
-				dialogVisualizarParametros= new DialogVisualizarParametros(this);
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.DIALOG_EDITAR_PARAMETROS)) {
+				dialogVisualizarParametros = new DialogVisualizarParametros(this);
 				dialogVisualizarParametros.setVisible(true);
-			}
-			else if (e.getActionCommand().equals(ConstantesInterfaz.MOSTRAR_TABLA_PARAMETROS)) {
-				if(dialogVisualizarParametros.getBoxParametros().getSelectedItem().equals(TipoTablaEnum.MARCA)){
-					ArrayList<Marca> marcas= new ArrayList<>();
-					for (int i = 0; i < ni.listarObjetos(TipoTablaEnum.MARCA).size(); i++) {
-						Marca marca=(Marca)ni.listarObjetos(TipoTablaEnum.MARCA).get(i);
-						marcas.add(marca);
-					}
+			} else if (e.getActionCommand().equals(ConstantesInterfaz.MOSTRAR_TABLA_PARAMETROS)) {
+				if (dialogVisualizarParametros.getBoxParametros().getSelectedItem().equals(TipoTablaEnum.MARCA)) {
+					List<Marca> marcas = (List)ni.listarObjetos(TipoTablaEnum.MARCA);
 					dialogVisualizarParametros.adicionarMarca(marcas);
-				}
-				else if(dialogVisualizarParametros.getBoxParametros().getSelectedItem().equals(TipoTablaEnum.CATEGORIA)){
-					ArrayList<Categoria> categorias= new ArrayList<>();
-					for (int i = 0; i < ni.listarObjetos(TipoTablaEnum.CATEGORIA).size(); i++) {
-						Categoria categoria=(Categoria)ni.listarObjetos(TipoTablaEnum.CATEGORIA).get(i);
-						categorias.add(categoria);
-					}
+				} else if (dialogVisualizarParametros.getBoxParametros().getSelectedItem()
+						.equals(TipoTablaEnum.CATEGORIA)) {
+					List<Categoria> categorias = (List)ni.listarObjetos(TipoTablaEnum.CATEGORIA);
 					dialogVisualizarParametros.adicionarCategoria(categorias);
-				}
-				else if(dialogVisualizarParametros.getBoxParametros().getSelectedItem().equals(TipoTablaEnum.TAMANIO)){
-					ArrayList<Tamanio> tamanios= new ArrayList<>();
-					for (int i = 0; i < ni.listarObjetos(TipoTablaEnum.TAMANIO).size(); i++) {
-						Tamanio tamanio=(Tamanio)ni.listarObjetos(TipoTablaEnum.TAMANIO).get(i);
-						tamanios.add(tamanio);
-					}
+				} else if (dialogVisualizarParametros.getBoxParametros().getSelectedItem()
+						.equals(TipoTablaEnum.TAMANIO)) {
+					List<Tamanio> tamanios = (List)ni.listarObjetos(TipoTablaEnum.TAMANIO);
 					dialogVisualizarParametros.adicionarTamanio(tamanios);
-				}
-				else if(dialogVisualizarParametros.getBoxParametros().getSelectedItem().equals(TipoTablaEnum.ORIGEN)){
-					ArrayList<Origen> origenes= new ArrayList<>();
-					for (int i = 0; i < ni.listarObjetos(TipoTablaEnum.ORIGEN).size(); i++) {
-						Origen origen=(Origen)ni.listarObjetos(TipoTablaEnum.ORIGEN).get(i);
-						origenes.add(origen);
-					}
+				} else if (dialogVisualizarParametros.getBoxParametros().getSelectedItem()
+						.equals(TipoTablaEnum.ORIGEN)) {
+					List<Origen> origenes = (List)ni.listarObjetos(TipoTablaEnum.ORIGEN);
 					dialogVisualizarParametros.adicionarOrigen(origenes);
-				}
-				else if(dialogVisualizarParametros.getBoxParametros().getSelectedItem().equals(TipoTablaEnum.TIPO)){
-					ArrayList<TipoProducto> tipos= new ArrayList<>();
+				} else if (dialogVisualizarParametros.getBoxParametros().getSelectedItem().equals(TipoTablaEnum.TIPO)) {
+					ArrayList<TipoProducto> tipos = new ArrayList<>();
 					for (int i = 0; i < ni.listarObjetos(TipoTablaEnum.TIPO).size(); i++) {
-						TipoProducto tipo=(TipoProducto)ni.listarObjetos(TipoTablaEnum.TIPO).get(i);
+						TipoProducto tipo = (TipoProducto) ni.listarObjetos(TipoTablaEnum.TIPO).get(i);
 						tipos.add(tipo);
 					}
 					dialogVisualizarParametros.adicionarTipo(tipos);
+				}
+			}else if(e.getActionCommand().equals(ConstantesInterfaz.EXPORTAR_PDF)){
+				if(inventarioActual!=null){
+
+					JFileChooser fc = new JFileChooser();
+					fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+//					fc.setCurrentDirectory(new File(path));
+						
+						int returnVal = fc.showOpenDialog(null);
+						String directorioDescarga=null;
+				        if (returnVal == JFileChooser.APPROVE_OPTION) {
+				        	
+				        	 directorioDescarga = fc.getSelectedFile().getAbsolutePath();
+				        	
+				        } 
+					
+				List<InventarioPeriodico> listaProductosInventario = ni.consultarInventarioPeriodico(inventarioActual);
+				ManejadorPdf manejadorPdf = new ManejadorPdf(listaProductosInventario,directorioDescarga);
+				manejadorPdf.crearPdf();
+				}else{
+					JOptionPane.showMessageDialog(null, "No se ha creado el inventario");
 				}
 			}
 		} catch (Exception e1) {
@@ -520,8 +506,17 @@ public class ControladorInventario implements ActionListener {
 			JOptionPane.showMessageDialog(null, e1.getMessage(), "Error autenticación", JOptionPane.ERROR_MESSAGE);
 		}
 	}
-
-
+	private void consultarProducto(){
+		Categoria categoria = ((Categoria) dialogMostrarProductos.getBoxCategoria().getSelectedItem());
+		Marca marca = ((Marca) dialogMostrarProductos.getBoxMarca().getSelectedItem());
+		TipoProducto tipo = ((TipoProducto) dialogMostrarProductos.getBoxTipo().getSelectedItem());
+		Tamanio tamanio = ((Tamanio) dialogMostrarProductos.getBoxTamanio().getSelectedItem());
+		Origen origen = ((Origen) dialogMostrarProductos.getBoxOrigen().getSelectedItem());
+		GeneroEnum genero = (GeneroEnum) dialogMostrarProductos.getBoxGenero().getSelectedItem();
+		Producto producto = new Producto(categoria, genero, tipo, marca, tamanio, origen);
+		dialogMostrarProductos.adicionarProducto(ni.consultarProducto(producto));
+		dialogMostrarProductos.repaint();
+	}
 	public Integer getIdProductoEditar() {
 		return idProductoEditar;
 	}

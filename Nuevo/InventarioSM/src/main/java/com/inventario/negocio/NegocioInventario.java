@@ -154,7 +154,6 @@ public class NegocioInventario {
 		Inventario inventario = null;
 		try {
 			inventario = dao.consultarInventario();
-			System.out.println(dao.consultarInventario());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -297,5 +296,16 @@ public class NegocioInventario {
 			e.printStackTrace();
 			log.escribirError("Error al editar Producto " + origen, e);
 		}
+	}
+
+	public List<InventarioPeriodico> consultarInventarioPeriodico(Inventario inventario) {
+		List<InventarioPeriodico> lista = null;
+		try {
+			lista = dao.consultarInventarioPeriodico(inventario);
+		} catch (Exception e) {
+			e.printStackTrace();
+			log.escribirError("Error al editar Producto ", e);
+		}
+		return lista;
 	}
 }

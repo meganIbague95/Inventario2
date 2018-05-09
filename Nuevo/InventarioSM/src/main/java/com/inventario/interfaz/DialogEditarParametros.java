@@ -4,14 +4,12 @@ import java.awt.Image;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 import com.inventario.controlador.ControladorInventario;
-import com.inventario.enums.TipoTablaEnum;
 import com.inventario.esquema.Categoria;
 import com.inventario.esquema.Marca;
 import com.inventario.esquema.Origen;

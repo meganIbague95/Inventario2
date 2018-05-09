@@ -39,7 +39,6 @@ public class DialogMostrarProductos extends JDialog {
 	private JLabel lblTamanio;
 	private JLabel lblTipo;
 	private JLabel lblGenero;
-	private JButton btnEditar;
 
 	private JComboBox<Categoria> boxCategoria;
 	private JComboBox<Marca> boxMarca;

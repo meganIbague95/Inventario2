@@ -43,6 +43,7 @@ public class Producto implements Serializable {
 		this.tamanio = tamanio;
 		this.idProducto = idProducto;
 		this.origen = origen;
+		this.listaCampos=getListaCampos();
 	}
 
 	public Producto(String nombreProducto, Categoria categoria, GeneroEnum genero, TipoProducto tipo, Marca marca,
@@ -57,6 +58,7 @@ public class Producto implements Serializable {
 		this.tamanio = tamanio;
 		this.origen = origen;
 		this.genero = genero;
+		this.listaCampos=getListaCampos();
 	}
 
 	public Producto(Categoria categoria, GeneroEnum genero, TipoProducto tipo, Marca marca, Tamanio tamanio,
