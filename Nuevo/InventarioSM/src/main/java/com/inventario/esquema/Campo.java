@@ -78,7 +78,7 @@ public class Campo implements Serializable {
 
     public String toString() {
 	this.valorCampo = this.valorCampo == null ? "" : this.valorCampo;
-	return this.nombreCampo + "(" + this.valorCampo + ");";
+	return this.valorCampo;
     }
 
 }

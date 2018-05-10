@@ -445,6 +445,7 @@ public class TransaccionesDAO implements TransaccionesDAOInterface {
 
 	public Usuario consultarUsuarioSeguridad(String login) throws Exception {
 		StringBuilder sql = new StringBuilder(ConstantesSQL.CONSULTAR_USUARIO_SEGURIDAD);
+		System.out.println(sql.toString());
 		PreparedStatement ps = null;
 		Connection conexion = null;
 		ResultSet set = null;
