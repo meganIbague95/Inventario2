@@ -1,10 +1,14 @@
 package com.inventario.interfaz;
 
+import java.awt.Image;
+
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 
 import com.inventario.controlador.ControladorInventario;
 import com.inventario.enums.GeneroEnum;
@@ -51,7 +55,7 @@ public class DialogEditarProducto extends JDialog {
 	private NegocioInventario negocio = new NegocioInventario();
 
 	public DialogEditarProducto(ControladorInventario controladorInventario, Producto producto) {
-		setSize(600, 400);
+		setSize(500, 450);
 		setResizable(Boolean.FALSE);
 		setLayout(null);
 		setTitle("Editar Producto");
@@ -67,13 +71,13 @@ public class DialogEditarProducto extends JDialog {
 		lblNombre.setBounds(50, 50, 100, 25);
 
 		txtNombre = new JTextField(producto.getNombreProducto().getValorCampo());
-		txtNombre.setBounds(140, 50, 100, 25);
+		txtNombre.setBounds(140, 50, 150, 25);
 
 		lblCantidad = new JLabel("Cantidad");
-		lblCantidad.setBounds(250, 50, 100, 25);
+		lblCantidad.setBounds(300, 50, 100, 25);
 
 		txtCantidad = new JTextField(producto.getCantidad().getValorCampo());
-		txtCantidad.setBounds(340, 50, 100, 25);
+		txtCantidad.setBounds(380, 50, 50, 25);
 
 		lblPrecio = new JLabel("Precio interno");
 		lblPrecio.setBounds(50, 100, 100, 25);
@@ -90,7 +94,7 @@ public class DialogEditarProducto extends JDialog {
 		lblCategoria.setBounds(50, 150, 100, 25);
 
 		boxCategoria = new JComboBox<Categoria>();
-		boxCategoria.setBounds(140, 150, 100, 25);
+		boxCategoria.setBounds(120, 150, 120, 25);
 		boxCategoria.addItem(null);
 		for (Object objeto : negocio.listarObjetos(TipoTablaEnum.CATEGORIA)) {
 			Categoria categoria = (Categoria) objeto;
@@ -101,7 +105,7 @@ public class DialogEditarProducto extends JDialog {
 		lblTipo.setBounds(250, 150, 100, 25);
 
 		boxTipo = new JComboBox<TipoProducto>();
-		boxTipo.setBounds(340, 150, 100, 25);
+		boxTipo.setBounds(320, 150, 120, 25);
 		boxTipo.addItem(null);
 		for (Object objeto : negocio.listarObjetos(TipoTablaEnum.TIPO)) {
 			TipoProducto tipo = (TipoProducto) objeto;
@@ -111,7 +115,7 @@ public class DialogEditarProducto extends JDialog {
 		lblTamanio.setBounds(50, 200, 100, 25);
 
 		boxTamanio = new JComboBox<Tamanio>();
-		boxTamanio.setBounds(140, 200, 100, 25);
+		boxTamanio.setBounds(120, 200, 120, 25);
 		boxTamanio.addItem(null);
 		for (Object objeto : negocio.listarObjetos(TipoTablaEnum.TAMANIO)) {
 			Tamanio tamanio = (Tamanio) objeto;
@@ -121,18 +125,18 @@ public class DialogEditarProducto extends JDialog {
 		lblMarca.setBounds(250, 200, 100, 25);
 
 		boxMarca = new JComboBox<Marca>();
-		boxMarca.setBounds(340, 200, 100, 25);
+		boxMarca.setBounds(320, 200, 120, 25);
 		boxMarca.addItem(null);
 		for (Object objeto : negocio.listarObjetos(TipoTablaEnum.MARCA)) {
 			Marca marca = (Marca) objeto;
 			boxMarca.addItem(marca);
 		}
 
-		lblGenero = new JLabel("Genero");
+		lblGenero = new JLabel("Género");
 		lblGenero.setBounds(50, 250, 100, 25);
 
 		boxGenero = new JComboBox<GeneroEnum>();
-		boxGenero.setBounds(140, 250, 100, 25);
+		boxGenero.setBounds(120, 250, 120, 25);
 		boxGenero.addItem(null);
 		boxGenero.addItem(GeneroEnum.DAMA);
 		boxGenero.addItem(GeneroEnum.HOMBRE);
@@ -143,20 +147,30 @@ public class DialogEditarProducto extends JDialog {
 		lblOrigen.setBounds(250, 250, 100, 25);
 
 		boxOrigen = new JComboBox<Origen>();
-		boxOrigen.setBounds(340, 250, 100, 25);
+		boxOrigen.setBounds(320, 250, 120, 25);
 		boxOrigen.addItem(null);
 		for (Object objeto : negocio.listarObjetos(TipoTablaEnum.ORIGEN)) {
 			Origen origen = (Origen) objeto;
 			boxOrigen.addItem(origen);
 		}
-
+		
+		Image crear = new ImageIcon(".\\imagenes\\botonIngresar.jpg").getImage();
+		ImageIcon imageCrear = new ImageIcon(crear.getScaledInstance(30,30,Image.SCALE_DEFAULT));
 		btnCrear = new JButton("Editar");
-		btnCrear.setBounds(150, 300, 100, 25);
+		btnCrear.setBounds(100, 300, 100, 60);
+		btnCrear.setIcon(imageCrear);
+		btnCrear.setHorizontalTextPosition( SwingConstants.CENTER );
+		btnCrear.setVerticalTextPosition( SwingConstants.BOTTOM );
 		btnCrear.addActionListener(this.controlador);
 		btnCrear.setActionCommand(ConstantesInterfaz.EDITAR_PRODUCTO);
 
+		Image cerrar = new ImageIcon(".\\imagenes\\cerrar.jpg").getImage();
+		ImageIcon imageCerrar = new ImageIcon(cerrar.getScaledInstance(30,30,Image.SCALE_DEFAULT));
 		btnCerrar = new JButton("Cerrar");
-		btnCerrar.setBounds(300, 300, 100, 25);
+		btnCerrar.setIcon(imageCerrar);
+		btnCerrar.setHorizontalTextPosition( SwingConstants.CENTER );
+		btnCerrar.setVerticalTextPosition( SwingConstants.BOTTOM );
+		btnCerrar.setBounds(300, 300, 100, 60);
 		btnCerrar.addActionListener(this.controlador);
 		btnCerrar.setActionCommand(ConstantesInterfaz.CERRAR_EDITAR_PRODUCTO);
 		this.add(lblNombre);

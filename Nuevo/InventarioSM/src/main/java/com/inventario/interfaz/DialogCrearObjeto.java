@@ -2,6 +2,7 @@ package com.inventario.interfaz;
 
 import java.awt.Image;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -20,7 +21,7 @@ public class DialogCrearObjeto extends JDialog {
 	 */
 	private static final long serialVersionUID = 1L;
 	private JLabel lblObjeto;
-	private JComboBox<TipoTablaEnum> boxTipoTabla;
+	private JComboBox<String> boxTipoTabla;
 	private JLabel lblNombre;
 	private JTextField txtNombre;
 	private JButton btnCrear;
@@ -33,6 +34,8 @@ public class DialogCrearObjeto extends JDialog {
 		setLayout(null);
 		setTitle("Crear parametrización");
 		setLocationRelativeTo(null);
+//		this.setAlwaysOnTop(true);
+//		this.setFocusable(false);
 		this.controlador = controladorInventario;
 		inicializarComponentes();
 	}
@@ -41,18 +44,18 @@ public class DialogCrearObjeto extends JDialog {
 		lblObjeto = new JLabel("Tipo de objeto:");
 		lblObjeto.setBounds(30, 30, 100, 25);
 
-		boxTipoTabla = new JComboBox<TipoTablaEnum>();
+		boxTipoTabla = new JComboBox<>();
 		boxTipoTabla.setBounds(130, 30, 100, 25);
 
 		for (TipoTablaEnum tipoTabla : TipoTablaEnum.values()) {
-			boxTipoTabla.addItem(tipoTabla);
+			boxTipoTabla.addItem(tipoTabla.getNombreTabla());
 		}
 
 		lblNombre = new JLabel("Nombre");
 		lblNombre.setBounds(30, 80, 100, 25);
 
 		txtNombre = new JTextField();
-		txtNombre.setBounds(130, 80, 100, 25);
+		txtNombre.setBounds(80, 80, 150, 25);
 
 		Image crear = new ImageIcon(".\\imagenes\\botonIngresar.jpg").getImage();
 		ImageIcon imageCrear = new ImageIcon(crear.getScaledInstance(30,30,Image.SCALE_DEFAULT));
@@ -72,7 +75,7 @@ public class DialogCrearObjeto extends JDialog {
 		btnCerrar.setVerticalTextPosition( SwingConstants.BOTTOM );
 		btnCerrar.setBounds(140, 120, 80, 60);
 		btnCerrar.addActionListener(this.controlador);
-		btnCerrar.setActionCommand(ConstantesInterfaz.CERRAR);
+		btnCerrar.setActionCommand(ConstantesInterfaz.CERRAR_PARAMETRIZACION);
 
 		this.add(lblObjeto);
 		this.add(boxTipoTabla);
@@ -83,11 +86,13 @@ public class DialogCrearObjeto extends JDialog {
 
 	}
 
-	public JComboBox<TipoTablaEnum> getBoxTipoTabla() {
+	
+
+	public JComboBox<String> getBoxTipoTabla() {
 		return boxTipoTabla;
 	}
 
-	public void setBoxTipoTabla(JComboBox<TipoTablaEnum> boxTipoTabla) {
+	public void setBoxTipoTabla(JComboBox<String> boxTipoTabla) {
 		this.boxTipoTabla = boxTipoTabla;
 	}
 

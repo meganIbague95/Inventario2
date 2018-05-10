@@ -37,7 +37,7 @@ public class DialogAgregarProductosNuevos extends JDialog{
 		setSize(800, 800);
 		setResizable(Boolean.FALSE);
 		setLayout(null);
-		setTitle("Mostrar productos");
+		setTitle("Agregar productos");
 		setLocationRelativeTo(null);
 		createJtable();
 		setColumnJtable();
@@ -78,7 +78,7 @@ public class DialogAgregarProductosNuevos extends JDialog{
 		dtm.addColumn("Precio interno");
 		dtm.addColumn("Precio venta");
 		dtm.addColumn("Categoria");
-		dtm.addColumn("Genero");
+		dtm.addColumn("Género");
 		dtm.addColumn("Marca");
 		dtm.addColumn("Tamaño");
 		dtm.addColumn("Origen");

@@ -23,7 +23,7 @@ public class SeguridadInventario {
 	public Usuario validarUsuario(String usuario, String contrasenia) throws Exception {
 		String contraseniaEncriptada = Utilidades.encriptarContrasenia(contrasenia);
 		Usuario usuarioLogueo = null;
-
+		System.out.println(usuario);
 		usuarioLogueo = dao.consultarUsuarioSeguridad(usuario);
 		if (usuarioLogueo == null) {
 			throw new Exception("El usuario no existe en el sistema o se encuentra inactivo");

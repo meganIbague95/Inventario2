@@ -60,6 +60,7 @@ public class DialogAgregarProductos extends JDialog {
 		setSize(900, 700);
 		setResizable(Boolean.FALSE);
 		setLayout(null);
+//		setAlwaysOnTop( true );
 		setTitle("Agregar productos");
 		setLocationRelativeTo(null);
 		createJtable();
@@ -183,7 +184,7 @@ public class DialogAgregarProductos extends JDialog {
 			Origen origen = (Origen) objeto;
 			boxOrigen.addItem(origen);
 		}
-		lblGenero = new JLabel("Genero");
+		lblGenero = new JLabel("Género");
 		lblGenero.setBounds(600, 80, 100, 25);
 
 		boxGenero = new JComboBox<GeneroEnum>();

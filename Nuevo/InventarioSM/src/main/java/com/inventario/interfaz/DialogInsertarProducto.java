@@ -57,6 +57,8 @@ public class DialogInsertarProducto extends JDialog {
 		setResizable(Boolean.FALSE);
 		setLayout(null);
 		setTitle("Agregar Producto");
+//		this.setAlwaysOnTop(true);
+//		this.setFocusableWindowState(true);
 		setLocationRelativeTo(null);
 		this.controlador = controladorInventario;
 		this.negocio = this.controlador.getNi();
@@ -68,13 +70,13 @@ public class DialogInsertarProducto extends JDialog {
 		lblNombre.setBounds(50, 50, 100, 25);
 
 		txtNombre = new JTextField();
-		txtNombre.setBounds(140, 50, 100, 25);
+		txtNombre.setBounds(140, 50, 150, 25);
 
 		lblCantidad = new JLabel("Cantidad");
-		lblCantidad.setBounds(250, 50, 100, 25);
+		lblCantidad.setBounds(320, 50, 100, 25);
 
 		txtCantidad = new JTextField();
-		txtCantidad.setBounds(340, 50, 100, 25);
+		txtCantidad.setBounds(390, 50, 50, 25);
 
 		lblPrecio = new JLabel("Precio interno");
 		lblPrecio.setBounds(50, 100, 100, 25);
@@ -93,6 +95,7 @@ public class DialogInsertarProducto extends JDialog {
 
 		boxCategoria = new JComboBox<Categoria>();
 		boxCategoria.setBounds(140, 150, 100, 25);
+		boxCategoria.addItem(null);
 		for (Object objeto : negocio.listarObjetos(TipoTablaEnum.CATEGORIA)) {
 			Categoria categoria = (Categoria) objeto;
 			boxCategoria.addItem(categoria);
@@ -103,6 +106,7 @@ public class DialogInsertarProducto extends JDialog {
 
 		boxTipo = new JComboBox<TipoProducto>();
 		boxTipo.setBounds(340, 150, 100, 25);
+		boxTipo.addItem(null);
 		for (Object objeto : negocio.listarObjetos(TipoTablaEnum.TIPO)) {
 			TipoProducto tipo = (TipoProducto) objeto;
 			boxTipo.addItem(tipo);
@@ -112,6 +116,7 @@ public class DialogInsertarProducto extends JDialog {
 
 		boxTamanio = new JComboBox<Tamanio>();
 		boxTamanio.setBounds(140, 200, 100, 25);
+		boxTamanio.addItem(null);
 		for (Object objeto : negocio.listarObjetos(TipoTablaEnum.TAMANIO)) {
 			Tamanio tamanio = (Tamanio) objeto;
 			boxTamanio.addItem(tamanio);
@@ -121,16 +126,18 @@ public class DialogInsertarProducto extends JDialog {
 
 		boxMarca = new JComboBox<Marca>();
 		boxMarca.setBounds(340, 200, 100, 25);
+		boxMarca.addItem(null);
 		for (Object objeto : negocio.listarObjetos(TipoTablaEnum.MARCA)) {
 			Marca marca = (Marca) objeto;
 			boxMarca.addItem(marca);
 		}
 
-		lblGenero = new JLabel("Genero");
+		lblGenero = new JLabel("Género");
 		lblGenero.setBounds(50, 250, 100, 25);
 
 		boxGenero = new JComboBox<GeneroEnum>();
 		boxGenero.setBounds(140, 250, 100, 25);
+		boxGenero.addItem(null);
 		boxGenero.addItem(GeneroEnum.DAMA);
 		boxGenero.addItem(GeneroEnum.HOMBRE);
 		boxGenero.addItem(GeneroEnum.NIÑA);
@@ -141,6 +148,7 @@ public class DialogInsertarProducto extends JDialog {
 
 		boxOrigen = new JComboBox<Origen>();
 		boxOrigen.setBounds(340, 250, 100, 25);
+		boxOrigen.addItem(null);
 		for (Object objeto : negocio.listarObjetos(TipoTablaEnum.ORIGEN)) {
 			Origen origen = (Origen) objeto;
 			boxOrigen.addItem(origen);

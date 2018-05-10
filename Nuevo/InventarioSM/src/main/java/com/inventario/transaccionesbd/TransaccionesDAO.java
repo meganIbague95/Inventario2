@@ -227,8 +227,12 @@ public class TransaccionesDAO implements TransaccionesDAOInterface {
 
 	public void insertarObjetos(TipoTablaEnum tipoTabla, String nombre) throws Exception {
 		StringBuilder sql = new StringBuilder(ConstantesSQL.INSERTAR_PARAMETRIZACION);
+		System.out.println(tipoTabla+"  "+TipoTablaEnum.TAMANIO.getNombreTabla());
+		if(tipoTabla.equals(TipoTablaEnum.TAMANIO)){
+			sql.append(TipoTablaEnum.TAMANIO).append(ConstantesSQL.VALUES);
+		}else{
 		sql.append(tipoTabla.getNombreTabla()).append(ConstantesSQL.VALUES);
-
+		}
 		PreparedStatement ps = null;
 		Connection conexion = null;
 		try {
@@ -250,7 +254,11 @@ public class TransaccionesDAO implements TransaccionesDAOInterface {
 	public List<Object> consultarObjeto(TipoTablaEnum tipoTabla) throws Exception {
 		List<Object> lista = null;
 		StringBuilder sql = new StringBuilder(ConstantesSQL.CONSULTAR_OBJETO_COMPLETO);
+		if(tipoTabla.equals(TipoTablaEnum.TAMANIO)){
+			sql.append(tipoTabla.getNombreColumna()).append(ConstantesSQL.CONSULTAR_OBJETO).append(ConstantesSQL.FROM).append(TipoTablaEnum.TAMANIO);
+		}else{
 		sql.append(tipoTabla.getNombreColumna()).append(ConstantesSQL.CONSULTAR_OBJETO).append(ConstantesSQL.FROM).append(tipoTabla.getNombreTabla());
+		}
 		System.out.println(sql.toString());
 		PreparedStatement ps = null;
 		Connection conexion = null;

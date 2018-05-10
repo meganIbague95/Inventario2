@@ -28,6 +28,7 @@ public class DialogMostrarInventarios extends JDialog {
 	private JComboBox<String> boxInventario;
 	
 	private JButton btnMostrar;
+	private JButton btnCerrar;
 	private JTable jtTable;
 	private DefaultTableModel dtm ;
 
@@ -37,7 +38,7 @@ public class DialogMostrarInventarios extends JDialog {
 		setSize(800, 700);
 		setResizable(Boolean.FALSE);
 		setLayout(null);
-		setTitle("Mostrar inventarios");
+		setTitle("Consultar inventarios");
 		setLocationRelativeTo(null);
 			createJtable();
 			setColumnJtable();
@@ -45,10 +46,10 @@ public class DialogMostrarInventarios extends JDialog {
 	}
 	public void inicializar(){
 		lblInventario= new JLabel("Inventario");
-		lblInventario.setBounds(200,30,100,25);
+		lblInventario.setBounds(30,30,100,25);
 
 		boxInventario= new JComboBox<String>();
-		boxInventario.setBounds(300, 30, 100, 25);
+		boxInventario.setBounds(150, 30, 100, 25);
 		boxInventario.addItem("Local");
 		boxInventario.addItem("Bodega");
 
@@ -58,14 +59,25 @@ public class DialogMostrarInventarios extends JDialog {
 		btnMostrar.setIcon(imageMostrar);
 		btnMostrar.setHorizontalTextPosition( SwingConstants.CENTER );
 		btnMostrar.setVerticalTextPosition( SwingConstants.BOTTOM );
-		btnMostrar.setBounds(430, 15, 100, 60);
+		btnMostrar.setBounds(330, 15, 100, 60);
 		btnMostrar.addActionListener(this.controladorInventario);
 		btnMostrar.setActionCommand(ConstantesInterfaz.MOSTRAR_INVENTARIO);
+		
+		Image cerrar = new ImageIcon(".\\imagenes\\cerrarInv.png").getImage();
+		ImageIcon imageCerrar= new ImageIcon(cerrar.getScaledInstance(30,30,Image.SCALE_DEFAULT));
+		btnCerrar= new JButton("Cerrar");
+		btnCerrar.setIcon(imageCerrar);
+		btnCerrar.setHorizontalTextPosition( SwingConstants.CENTER );
+		btnCerrar.setVerticalTextPosition( SwingConstants.BOTTOM );
+		btnCerrar.setBounds(500, 15, 100, 60);
+		btnCerrar.addActionListener(this.controladorInventario);
+		btnCerrar.setActionCommand(ConstantesInterfaz.CERRAR_MOSTRAR_INVENTARIO);
 		
 
 		this.add(lblInventario);
 		this.add(boxInventario);
 		this.add(btnMostrar);
+		this.add(btnCerrar);
 	}
 	private void createJtable() {
 		jtTable = new JTable();

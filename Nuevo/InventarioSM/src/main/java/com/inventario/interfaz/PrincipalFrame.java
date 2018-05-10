@@ -1,5 +1,6 @@
 package com.inventario.interfaz;
 
+import java.awt.GridLayout;
 import java.awt.Image;
 
 import javax.swing.ImageIcon;
@@ -37,16 +38,17 @@ public class PrincipalFrame extends JFrame {
 
 	public PrincipalFrame() {
 		setSize(720,270);
-		setLayout(null);
+		setLayout(new GridLayout(4,2));
 		setTitle("Principal");
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setLocationRelativeTo(null);
 		setResizable(Boolean.FALSE);
 
 		this.controlador = new ControladorInventario();
+		int ancho = (int)(java.awt.Toolkit.getDefaultToolkit().getScreenSize(). width);
 
 		menu = new JMenuBar();
-		menu.setBounds(0, 0, 720, 20);
+		menu.setBounds(0, 0, ancho, 20);
 		opciones = new JMenu("Opciones");
 		
 		crearProducto = new JMenuItem("Crear Producto");
@@ -71,7 +73,7 @@ public class PrincipalFrame extends JFrame {
 		
 		Image icrearProducto = new ImageIcon(".\\imagenes\\agregarProducto.jpg").getImage();
 		ImageIcon imagecrearProducto = new ImageIcon(icrearProducto.getScaledInstance(40,40,Image.SCALE_DEFAULT));
-		btnCrearProducto= new JButton("Crear Producto");
+		btnCrearProducto= new JButton("Agregar Producto");
 		btnCrearProducto.setBounds(30, 50,150,70);
 		btnCrearProducto.setIcon(imagecrearProducto);
 		btnCrearProducto.setHorizontalTextPosition( SwingConstants.CENTER );
@@ -97,7 +99,7 @@ public class PrincipalFrame extends JFrame {
 		btnConsultarProductos.addActionListener(controlador);
 		btnConsultarProductos.setActionCommand(ConstantesInterfaz.CONSULTAR_PRODUCTO);
 		
-		Image icrearUsuario = new ImageIcon(".\\imagenes\\crearInvemtario.png").getImage();
+		Image icrearUsuario = new ImageIcon(".\\imagenes\\crearUsuarioPri.jpg").getImage();
 		ImageIcon imagecrearUsuario = new ImageIcon(icrearUsuario.getScaledInstance(40,40,Image.SCALE_DEFAULT));
 		btnCrearUsuario= new JButton("Crear usuario");
 		btnCrearUsuario.setBounds(380,140,150,70);
@@ -107,15 +109,17 @@ public class PrincipalFrame extends JFrame {
 		btnCrearUsuario.addActionListener(controlador);
 		btnCrearUsuario.setActionCommand(ConstantesInterfaz.DIALOG_CREAR_USUARIO);
 		
-		btnEditarParametros= new JButton("Editar parametros");
+		Image ieditarParametros = new ImageIcon(".\\imagenes\\crearInvemtario.png").getImage();
+		ImageIcon imageeditarParametros= new ImageIcon(ieditarParametros.getScaledInstance(40,40,Image.SCALE_DEFAULT));
+		btnEditarParametros= new JButton("Editar parámetros");
 		btnEditarParametros.setBounds(540,50,150,70);
-		btnEditarParametros.setIcon(imagecrearUsuario);
+		btnEditarParametros.setIcon(imageeditarParametros);
 		btnEditarParametros.setHorizontalTextPosition( SwingConstants.CENTER );
 		btnEditarParametros.setVerticalTextPosition( SwingConstants.BOTTOM );
 		btnEditarParametros.addActionListener(controlador);
 		btnEditarParametros.setActionCommand(ConstantesInterfaz.DIALOG_EDITAR_PARAMETROS);
 		
-		Image icrearIn = new ImageIcon(".\\imagenes\\crearInvemtario.png").getImage();
+		Image icrearIn = new ImageIcon(".\\imagenes\\crearInventarioPri.jpg").getImage();
 		ImageIcon imagecrearIn = new ImageIcon(icrearIn.getScaledInstance(40,40,Image.SCALE_DEFAULT));
 		btnCrearInventario= new JButton("Crear inventario");
 		btnCrearInventario.setBounds(30, 140,150,70);

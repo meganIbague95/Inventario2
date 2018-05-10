@@ -52,6 +52,10 @@ public class ConstantesInterfaz {
 	public static final String ELIMINAR_TAMANIO = "EliminarTamanio";
 	public static final String CONFIRMAR_ELIMINAR_TAMANIO = "ConfirmarEliminnarTamanio";
 	public static final String SALIR_AGREGAR_PRO = "SalirAgregarPro";
+	public static final String CERRAR_CREAR_INVENTARIO = "CerrarCrearInventario";
+	public static final String CERRAR_PARAMETRIZACION = "CerrarParametrizacion";
+	public static final String CERRAR_PARAMETROS =  "CerrarParametros";
+	public static final String CERRAR_MOSTRAR_INVENTARIO = "CerrarMostrarInventario";
 	
 
 }

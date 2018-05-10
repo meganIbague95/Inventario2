@@ -32,6 +32,7 @@ public class DialogVisualizarParametros extends JDialog{
 	private JComboBox<TipoTablaEnum> boxParametros;
 
 	private JButton btnMostrar;
+	private JButton btnCerrar;
 	private JTable jtTable;
 	private DefaultTableModel dtm ;
 	private NegocioInventario negocioInventario; 
@@ -39,7 +40,7 @@ public class DialogVisualizarParametros extends JDialog{
 		setSize(600, 400);
 		setResizable(Boolean.FALSE);
 		setLayout(null);
-		setTitle("Mostrar parámetros");
+		setTitle("Editar parámetros");
 		setLocationRelativeTo(null);
 		this.controladorInventario = controladorInventario;
 		this.negocioInventario = this.controladorInventario.getNi();
@@ -50,11 +51,11 @@ public class DialogVisualizarParametros extends JDialog{
 	}
 
 	public void inicializarComponentes(){
-		lblParametros= new JLabel("Parametro");
-		lblParametros.setBounds(200,30,100,25);
+		lblParametros= new JLabel("Parámetro");
+		lblParametros.setBounds(30,30,100,25);
 		
 		boxParametros = new JComboBox<TipoTablaEnum>();
-		boxParametros.setBounds(300, 30, 100, 25);
+		boxParametros.setBounds(130, 30, 100, 25);
 
 		for (TipoTablaEnum tipoTabla : TipoTablaEnum.values()) {
 			boxParametros.addItem(tipoTabla);
@@ -66,14 +67,24 @@ public class DialogVisualizarParametros extends JDialog{
 		btnMostrar.setIcon(imageMostrar);
 		btnMostrar.setHorizontalTextPosition( SwingConstants.CENTER );
 		btnMostrar.setVerticalTextPosition( SwingConstants.BOTTOM );
-		btnMostrar.setBounds(430, 15, 100, 60);
+		btnMostrar.setBounds(270, 15, 100, 60);
 		btnMostrar.addActionListener(this.controladorInventario);
 		btnMostrar.setActionCommand(ConstantesInterfaz.MOSTRAR_TABLA_PARAMETROS);
-
+		
+		Image cerrar = new ImageIcon(".\\imagenes\\cerrar.jpg").getImage();
+		ImageIcon imageCerrar = new ImageIcon(cerrar.getScaledInstance(30,30,Image.SCALE_DEFAULT));
+		btnCerrar = new JButton("Cerrar");
+		btnCerrar.setIcon(imageCerrar);
+		btnCerrar.setHorizontalTextPosition( SwingConstants.CENTER );
+		btnCerrar.setVerticalTextPosition( SwingConstants.BOTTOM );
+		btnCerrar.setBounds(400, 15, 100, 60);
+		btnCerrar.addActionListener(this.controladorInventario);
+		btnCerrar.setActionCommand(ConstantesInterfaz.CERRAR_PARAMETROS);
 
 		this.add(lblParametros);
 		this.add(boxParametros);
 		this.add(btnMostrar);
+		this.add(btnCerrar);
 	}
 	private void createJtable() {
 		jtTable = new JTable();

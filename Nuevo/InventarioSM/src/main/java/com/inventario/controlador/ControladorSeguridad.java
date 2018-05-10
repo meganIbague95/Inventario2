@@ -36,6 +36,7 @@ public class ControladorSeguridad implements ActionListener {
 					login.dispose();
 					PrincipalFrame principalFrame = new PrincipalFrame();
 					principalFrame.setVisible(Boolean.TRUE);
+					principalFrame.setExtendedState(6);
 				}			
 		}
 		else if( e.getActionCommand().equals(ConstantesInterfaz.CERRAR)){
@@ -48,9 +49,9 @@ public class ControladorSeguridad implements ActionListener {
 	}
 public static void main(String[] args) {
 	SeguridadInventario si = new SeguridadInventario();
-	Persona persona = new Persona("CC",1057514979,"Sharon", "Dayana", "Ibague", "Pinzón", "Desarrolladora","sharon.ibague@gmail.com");
+	Persona persona = new Persona("CC",105751499,"Sharon", "Dayana", "Ibague", "Pinzón", "Desarrolladora","sharon.ibague@gmail.com");
 	Perfil perfil = new Perfil(1,"Administracio", "Administra la aplicación");
-	Usuario usuario = new Usuario("sibague", "Asdf1234", "A", "1",perfil, persona,new Date(),1,2);
+	Usuario usuario = new Usuario("sibague1", "Asdf1234", "A", "1",perfil, persona,new Date(),1,2);
 	ControladorSeguridad.usuario=usuario;
 	try {
 		si.crearPerfil(perfil);

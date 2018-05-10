@@ -8,6 +8,7 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -26,7 +27,7 @@ import com.inventario.esquema.TipoProducto;
 import com.inventario.negocio.NegocioInventario;
 import com.inventario.utilidades.ConstantesInterfaz;
 
-public class DialogMostrarProductos extends JDialog {
+public class DialogMostrarProductos extends JFrame {
 	/**
 	 * 
 	 */
@@ -58,7 +59,7 @@ public class DialogMostrarProductos extends JDialog {
 		setSize(900, 700);
 		setResizable(Boolean.FALSE);
 		setLayout(null);
-		setTitle("Mostrar productos");
+		setTitle("Consultar productos");
 		setLocationRelativeTo(null);
 		createJtable();
 		setColumnJtable();
@@ -71,7 +72,7 @@ public class DialogMostrarProductos extends JDialog {
 		this.dtm = (DefaultTableModel) jtTable.getModel();
 		JScrollPane scrollPane = new JScrollPane(jtTable);
 		this.add(scrollPane);
-		scrollPane.setBounds(30, 200, 830, 450);
+		scrollPane.setBounds(30, 200, 1270, 450);
 	}
 
 	public void agregarBoton() {
@@ -106,7 +107,7 @@ public class DialogMostrarProductos extends JDialog {
 		dtm.addColumn("Precio interno");
 		dtm.addColumn("Precio venta");
 		dtm.addColumn("Categoria");
-		dtm.addColumn("Genero");
+		dtm.addColumn("Género");
 		dtm.addColumn("Marca");
 		dtm.addColumn("Tamaño");
 		dtm.addColumn("Origen");
@@ -135,10 +136,10 @@ public class DialogMostrarProductos extends JDialog {
 	private void inicializar() {
 
 		lblCategoria = new JLabel("Categoria");
-		lblCategoria.setBounds(50, 30, 100, 25);
+		lblCategoria.setBounds(20, 30, 100, 25);
 
 		boxCategoria = new JComboBox<Categoria>();
-		boxCategoria.setBounds(120, 30, 100, 25);
+		boxCategoria.setBounds(80, 30, 150, 25);
 		boxCategoria.addItem(null);
 		for (Object objeto : negocioInventario.listarObjetos(TipoTablaEnum.CATEGORIA)) {
 			Categoria categoria = (Categoria) objeto;
@@ -146,30 +147,30 @@ public class DialogMostrarProductos extends JDialog {
 		}
 
 		lblTipo = new JLabel("Tipo");
-		lblTipo.setBounds(330, 30, 100, 25);
+		lblTipo.setBounds(250, 30, 50, 25);
 
 		boxTipo = new JComboBox<TipoProducto>();
-		boxTipo.setBounds(390, 30, 100, 25);
+		boxTipo.setBounds(280, 30, 150, 25);
 		boxTipo.addItem(null);
 		for (Object objeto : negocioInventario.listarObjetos(TipoTablaEnum.TIPO)) {
 			TipoProducto tipo = (TipoProducto) objeto;
 			boxTipo.addItem(tipo);
 		}
 		lblTamanio = new JLabel("Tamaño");
-		lblTamanio.setBounds(600, 30, 100, 25);
+		lblTamanio.setBounds(440, 30, 60, 25);
 
 		boxTamanio = new JComboBox<Tamanio>();
-		boxTamanio.setBounds(690, 30, 100, 25);
+		boxTamanio.setBounds(500, 30, 100, 25);
 		boxTamanio.addItem(null);
 		for (Object objeto : negocioInventario.listarObjetos(TipoTablaEnum.TAMANIO)) {
 			Tamanio tamanio = (Tamanio) objeto;
 			boxTamanio.addItem(tamanio);
 		}
 		lblMarca = new JLabel("Marca");
-		lblMarca.setBounds(50, 80, 100, 25);
+		lblMarca.setBounds(640, 30, 60, 25);
 
 		boxMarca = new JComboBox<Marca>();
-		boxMarca.setBounds(120, 80, 100, 25);
+		boxMarca.setBounds(690, 30, 150, 25);
 		boxMarca.addItem(null);
 		for (Object objeto : negocioInventario.listarObjetos(TipoTablaEnum.MARCA)) {
 			Marca marca = (Marca) objeto;
@@ -177,20 +178,20 @@ public class DialogMostrarProductos extends JDialog {
 		}
 
 		lblOrigen = new JLabel("Origen");
-		lblOrigen.setBounds(330, 80, 100, 25);
+		lblOrigen.setBounds(870, 30, 100, 25);
 
 		boxOrigen = new JComboBox<Origen>();
-		boxOrigen.setBounds(390, 80, 100, 25);
+		boxOrigen.setBounds(920, 30, 150, 25);
 		boxOrigen.addItem(null);
 		for (Object objeto : negocioInventario.listarObjetos(TipoTablaEnum.ORIGEN)) {
 			Origen origen = (Origen) objeto;
 			boxOrigen.addItem(origen);
 		}
-		lblGenero = new JLabel("Genero");
-		lblGenero.setBounds(600, 80, 100, 25);
+		lblGenero = new JLabel("Género");
+		lblGenero.setBounds(1110, 30, 100, 25);
 
 		boxGenero = new JComboBox<GeneroEnum>();
-		boxGenero.setBounds(690, 80, 100, 25);
+		boxGenero.setBounds(1170, 30, 150, 25);
 		boxGenero.addItem(null);
 		boxGenero.addItem(GeneroEnum.HOMBRE);
 		boxGenero.addItem(GeneroEnum.DAMA);
@@ -203,7 +204,7 @@ public class DialogMostrarProductos extends JDialog {
 		btnFiltrar.setIcon(imageFiltrar);
 		btnFiltrar.setHorizontalTextPosition( SwingConstants.CENTER );
 		btnFiltrar.setVerticalTextPosition( SwingConstants.BOTTOM );
-		btnFiltrar.setBounds(250, 120, 100, 60);
+		btnFiltrar.setBounds(450, 100, 100, 60);
 		btnFiltrar.addActionListener(this.controladorInventario);
 		btnFiltrar.setActionCommand(ConstantesInterfaz.FILTRAR_PRODUCTO);
 
@@ -213,7 +214,7 @@ public class DialogMostrarProductos extends JDialog {
 		btnCerrar.setIcon(imageCerrar);
 		btnCerrar.setHorizontalTextPosition( SwingConstants.CENTER );
 		btnCerrar.setVerticalTextPosition( SwingConstants.BOTTOM );
-		btnCerrar.setBounds(500, 120, 100, 60);
+		btnCerrar.setBounds(750, 100, 100, 60);
 		btnCerrar.addActionListener(this.controladorInventario);
 		btnCerrar.setActionCommand(ConstantesInterfaz.CERRAR_FILTRO);
 		

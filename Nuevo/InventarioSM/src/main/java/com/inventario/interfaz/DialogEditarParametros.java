@@ -75,6 +75,7 @@ public class DialogEditarParametros extends JDialog {
 		this.add(txtNombre);
 		this.add(btnCrear);
 		this.add(btnCerrar);
+		this.add(btnCerrar);
 	}
 
 	public DialogEditarParametros(ControladorInventario controladorInventario, Marca marca) {

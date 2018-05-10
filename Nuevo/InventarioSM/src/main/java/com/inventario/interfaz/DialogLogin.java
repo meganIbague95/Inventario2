@@ -5,6 +5,7 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
@@ -16,8 +17,10 @@ import java.net.URL;
 
 import com.inventario.controlador.ControladorSeguridad;
 import com.inventario.utilidades.ConstantesInterfaz;
+import com.itextpdf.text.Font;
+import com.sun.javafx.tk.Toolkit;
 
-public class DialogLogin extends JDialog {
+public class DialogLogin extends JFrame {
 	/**
 	 * 
 	 */
@@ -38,7 +41,8 @@ public class DialogLogin extends JDialog {
 
 	public DialogLogin() {
 		this.controlador = new ControladorSeguridad(this);
-		setSize(600, 400);
+//		setSize(this.getMaximumSize());
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setResizable(Boolean.FALSE);
 		contentPane= getContentPane();
 		contentPane.setLayout(null);
@@ -49,30 +53,32 @@ public class DialogLogin extends JDialog {
 	}
 
 	public void inicializarComponentes() {
+		float escalar = 0.5F;  
+		int ancho = (int)(java.awt.Toolkit.getDefaultToolkit().getScreenSize(). width);
 		icono = new ImageIcon(getClass().getResource("/imagenes/encabezado.jpg"));
 		Image imagen = icono.getImage();
-		ImageIcon iconoEscalado = new ImageIcon (imagen.getScaledInstance(600,150,Image.SCALE_SMOOTH));
+		ImageIcon iconoEscalado = new ImageIcon (imagen.getScaledInstance(ancho,300,Image.SCALE_SMOOTH));
 		lblImagen = new JLabel();
 		lblImagen.setIcon(iconoEscalado);
-		lblImagen.setBounds(0, 0, 600, 150);
+		lblImagen.setBounds(0, 0, ancho, 300);
 
 		Image usuario = new ImageIcon("imagenes/IconoUsuarios.png").getImage();
 		ImageIcon iconoEscalado2 = new ImageIcon (usuario.getScaledInstance(180,180,Image.SCALE_SMOOTH));
 		lblUsuarioFoto = new JLabel();
 		lblUsuarioFoto.setIcon(iconoEscalado2);
-		lblUsuarioFoto.setBounds(30, 150, 180, 180);
+		lblUsuarioFoto.setBounds(300, 400, 200, 200);
 
 		lblUsuario = new JLabel("Usuario");
-		lblUsuario.setBounds(270, 180, 100, 25);
+		lblUsuario.setBounds(600, 400, 100, 30);
 
 		txtUsuario = new JTextField();
-		txtUsuario.setBounds(370, 180, 100, 25);
+		txtUsuario.setBounds(700, 400, 150, 25);
 
 		lblConstrasenia = new JLabel("Contraseña");
-		lblConstrasenia.setBounds(270, 220, 100, 25);
+		lblConstrasenia.setBounds(600, 450, 100, 25);
 
 		txtContrasenia = new JPasswordField();
-		txtContrasenia.setBounds(370, 220, 100, 25);
+		txtContrasenia.setBounds(700, 450, 150, 25);
 
 		Image ingresar = new ImageIcon(".\\imagenes\\botonIngresar.jpg").getImage();
 		ImageIcon imageIngresar = new ImageIcon(ingresar.getScaledInstance(40,40,Image.SCALE_DEFAULT));
@@ -81,7 +87,7 @@ public class DialogLogin extends JDialog {
 		btnIngresar.setIcon(imageIngresar);
 		btnIngresar.setHorizontalTextPosition( SwingConstants.CENTER );
 		btnIngresar.setVerticalTextPosition( SwingConstants.BOTTOM );
-		btnIngresar.setBounds(260, 260, 100, 80);
+		btnIngresar.setBounds(600, 500, 100, 80);
 		btnIngresar.addActionListener(this.controlador);
 		btnIngresar.setActionCommand(ConstantesInterfaz.INGRESAR);
 		
@@ -91,7 +97,7 @@ public class DialogLogin extends JDialog {
 		btnCerrar.setIcon(imageCerrar);
 		btnCerrar.setHorizontalTextPosition( SwingConstants.CENTER );
 		btnCerrar.setVerticalTextPosition( SwingConstants.BOTTOM );
-		btnCerrar.setBounds(380, 260, 100, 80);
+		btnCerrar.setBounds(750, 500, 100, 80);
 		btnCerrar.addActionListener(this.controlador);
 		btnCerrar.setActionCommand(ConstantesInterfaz.CERRAR);
 		contentPane.add(lblImagen);
@@ -142,5 +148,6 @@ public class DialogLogin extends JDialog {
 		DialogLogin login = new DialogLogin();
 
 		login.setVisible(Boolean.TRUE);
+		login.setExtendedState(6);
 	}
 }

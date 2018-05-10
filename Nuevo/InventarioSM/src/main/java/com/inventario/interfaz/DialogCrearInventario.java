@@ -1,7 +1,9 @@
 package com.inventario.interfaz;
 
+import java.awt.Image;
 import java.util.List;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -9,6 +11,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
 
 import com.inventario.controlador.ControladorInventario;
@@ -32,11 +35,13 @@ public class DialogCrearInventario extends JDialog {
 	private JButton btnAgregarProductos;
 	private JButton btnEliminarProductos;
 	private JButton btnCrearInventario;
+	private JButton btnCerrar;
 	private JButton btnExportarPdf;
 
 	public DialogCrearInventario(ControladorInventario controladorInventario) {
 		setSize(900, 700);
 		setResizable(Boolean.FALSE);
+//		setAlwaysOnTop( true );
 		setLayout(null);
 		setTitle("Crear Inventario");
 		setLocationRelativeTo(null);
@@ -51,7 +56,7 @@ public class DialogCrearInventario extends JDialog {
 		this.dtm = (DefaultTableModel) jtTable.getModel();
 		JScrollPane scrollPane = new JScrollPane(jtTable);
 		this.add(scrollPane);
-		scrollPane.setBounds(50, 200, 780, 400);
+		scrollPane.setBounds(50, 180, 780, 400);
 	}
 
 	public void agregarBoton() {
@@ -86,7 +91,7 @@ public class DialogCrearInventario extends JDialog {
 		dtm.addColumn("Precio interno");
 		dtm.addColumn("Precio venta");
 		dtm.addColumn("Categoria");
-		dtm.addColumn("Genero");
+		dtm.addColumn("Género");
 		dtm.addColumn("Marca");
 		dtm.addColumn("Tamaño");
 		dtm.addColumn("Origen");
@@ -126,25 +131,56 @@ public class DialogCrearInventario extends JDialog {
 		calendarFecha = new JCalendar();
 		calendarFecha.setBounds(400, 30, 200, 150);
 
-		btnAgregarProductos = new JButton("Agregar productos");
-		btnAgregarProductos.setBounds(50, 100, 150, 20);
+		
+		Image agregar = new ImageIcon(".\\imagenes\\agregarAinventario.png").getImage();
+		ImageIcon imageAgregar= new ImageIcon(agregar.getScaledInstance(30,30,Image.SCALE_DEFAULT));
+		btnAgregarProductos = new JButton("Agregar Productos");
+		btnAgregarProductos.setIcon(imageAgregar);
+		btnAgregarProductos.setHorizontalTextPosition( SwingConstants.CENTER );
+		btnAgregarProductos.setVerticalTextPosition( SwingConstants.BOTTOM );
+		btnAgregarProductos.setBounds(50, 80, 150, 60);
 		btnAgregarProductos.addActionListener(this.controlador);
 		btnAgregarProductos.setActionCommand(ConstantesInterfaz.AGREGAR_PRODUCTOS);
 
+		Image eliminar = new ImageIcon(".\\imagenes\\eliminarDeInventario.png").getImage();
+		ImageIcon imageEliminar= new ImageIcon(eliminar.getScaledInstance(30,30,Image.SCALE_DEFAULT));
 		btnEliminarProductos = new JButton("Eliminar producto");
-		btnEliminarProductos.setBounds(50, 150, 150, 20);
+		btnEliminarProductos.setIcon(imageEliminar);
+		btnEliminarProductos.setHorizontalTextPosition( SwingConstants.CENTER );
+		btnEliminarProductos.setVerticalTextPosition( SwingConstants.BOTTOM );
+		btnEliminarProductos.setBounds(230, 80, 150, 60);
 		btnEliminarProductos.addActionListener(this.controlador);
 		btnEliminarProductos.setActionCommand(ConstantesInterfaz.ELIMINAR_PRODUCTO_AGREGADO);
 
+		Image crear = new ImageIcon(".\\imagenes\\crearinventario.png").getImage();
+		ImageIcon imageCrear= new ImageIcon(crear.getScaledInstance(30,30,Image.SCALE_DEFAULT));
 		btnCrearInventario = new JButton("Crear inventario");
-		btnCrearInventario.setBounds(50, 620, 150, 20);
+		btnCrearInventario.setIcon(imageCrear);
+		btnCrearInventario.setHorizontalTextPosition( SwingConstants.CENTER );
+		btnCrearInventario.setVerticalTextPosition( SwingConstants.BOTTOM );
+		btnCrearInventario.setBounds(50, 595, 150, 60);
 		btnCrearInventario.addActionListener(this.controlador);
 		btnCrearInventario.setActionCommand(ConstantesInterfaz.CERRAR_INVENTARIO);
 
+		Image pdf = new ImageIcon(".\\imagenes\\pdf.png").getImage();
+		ImageIcon imagePdf= new ImageIcon(pdf.getScaledInstance(30,30,Image.SCALE_DEFAULT));
 		btnExportarPdf= new JButton("Exportar a Pdf");
-		btnExportarPdf.setBounds(250, 620, 150, 20);
+		btnExportarPdf.setIcon(imagePdf);
+		btnExportarPdf.setHorizontalTextPosition( SwingConstants.CENTER );
+		btnExportarPdf.setVerticalTextPosition( SwingConstants.BOTTOM );
+		btnExportarPdf.setBounds(360, 595, 150, 60);
 		btnExportarPdf.addActionListener(this.controlador);
 		btnExportarPdf.setActionCommand(ConstantesInterfaz.EXPORTAR_PDF);
+		
+		Image cerrar = new ImageIcon(".\\imagenes\\cerrarInv.png").getImage();
+		ImageIcon imageCerrar= new ImageIcon(cerrar.getScaledInstance(30,30,Image.SCALE_DEFAULT));
+		btnCerrar= new JButton("Cerrar");
+		btnCerrar.setIcon(imageCerrar);
+		btnCerrar.setHorizontalTextPosition( SwingConstants.CENTER );
+		btnCerrar.setVerticalTextPosition( SwingConstants.BOTTOM );
+		btnCerrar.setBounds(675, 595, 150, 60);
+		btnCerrar.addActionListener(this.controlador);
+		btnCerrar.setActionCommand(ConstantesInterfaz.CERRAR_CREAR_INVENTARIO);
 		
 		this.add(lblTipo);
 		this.add(boxTipoInventario);
@@ -154,6 +190,7 @@ public class DialogCrearInventario extends JDialog {
 		this.add(btnCrearInventario);
 		this.add(btnEliminarProductos);
 		this.add(btnExportarPdf);
+		this.add(btnCerrar);
 	}
 
 	public JTable getJtTable() {
