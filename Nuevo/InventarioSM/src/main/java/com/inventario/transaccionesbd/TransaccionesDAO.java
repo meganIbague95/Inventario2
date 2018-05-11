@@ -1146,7 +1146,43 @@ public class TransaccionesDAO implements TransaccionesDAOInterface {
 		return objeto;
 	}
 
+	public List<InventarioPeriodico> consultarInventarioPeriodico(Inventario inventario) throws Exception {
+		List<InventarioPeriodico> productos = new ArrayList<InventarioPeriodico>();
+		StringBuilder sql = new StringBuilder(ConstantesSQL.CONSULTAR_INVENTARIO_PERIODICO);
+		sql.append(ConstantesSQL.ORDENAR);
+		PreparedStatement ps = null;
+		Connection conexion = null;
+		ResultSet set = null;
+		Producto producto = null;
+		try {
+			conexion = ConnectionManagerJDBC.getConnection();
+			ps = conexion.prepareStatement(sql.toString());
+			ps.setInt(1, inventario.getIdInventario());
+			set = ps.executeQuery();
+			while (set.next()) {
 
+				Marca marca = new Marca(set.getInt(5), set.getString(11));
+				Categoria categoria = new Categoria(set.getInt(2), set.getString(12));
+				Tamanio tamanio = new Tamanio(set.getInt(7), set.getString(13));
+				TipoProducto tipopro = new TipoProducto(set.getInt(4), set.getString(15));
+				Origen origen = new Origen(set.getInt(9), set.getString(14));
+				producto = new Producto(set.getString(1), categoria, GeneroEnum.convertirTipo(set.getString(3)),
+						tipopro, marca, set.getString(6), tamanio, set.getInt(8), origen, set.getString(10),
+						set.getString(16));
+				System.out.println(producto.getNombreProducto());
+
+				InventarioPeriodico inventarioPeriodico = new InventarioPeriodico(new Integer(set.getString(17)),
+						producto, inventario,new BigDecimal(set.getString(18)));
+				productos.add(inventarioPeriodico);
+			}
+
+		} finally {
+			ConnectionManagerJDBC.closeResultSet(set);
+			ConnectionManagerJDBC.closePreparedStatement(ps);
+			ConnectionManagerJDBC.closeConnection(conexion);
+		}
+		return productos;
+	}
 
 
 	

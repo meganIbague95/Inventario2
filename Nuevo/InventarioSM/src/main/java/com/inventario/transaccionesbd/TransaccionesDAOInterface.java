@@ -60,4 +60,5 @@ public interface TransaccionesDAOInterface {
 	public void eliminarInventario(Integer codigo)throws Exception;
 	public List<Object> consultarObjetoCompleto(TipoTablaEnum tipoTabla) throws Exception;
 	public Object consultarObjetoId(TipoTablaEnum tipoTabla, Integer identificacion)throws Exception;
+	public List<InventarioPeriodico> consultarInventarioPeriodico(Inventario inventario) throws Exception;
 }
